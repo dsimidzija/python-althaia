@@ -1,0 +1,37 @@
+diff --git a/althaia/marshmallow/schema.py b/althaia/marshmallow/schema.py
+index 12bb2f4..9424b19 100644
+--- a/althaia/marshmallow/schema.py
++++ b/althaia/marshmallow/schema.py
+@@ -1,4 +1,5 @@
+ """The :class:`Schema` class, including its metaclass and options (class Meta)."""
++from abc import ABCMeta
+ from collections import defaultdict, OrderedDict
+ from collections.abc import Mapping
+ from functools import lru_cache
+@@ -126,10 +127,10 @@ class SchemaMeta(type):
+     @classmethod
+     def get_declared_fields(
+         mcs,
+-        klass: type,
++        klass: typing.Type[type],
+         cls_fields: typing.List,
+         inherited_fields: typing.List,
+-        dict_cls: type,
++        dict_cls: typing.Type[type],
+     ):
+         """Returns a dictionary of field_name => `Field` pairs declared on the class.
+         This is exposed mainly so that plugins can add additional fields, e.g. fields
+@@ -408,11 +409,11 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
+         )
+ 
+     @property
+-    def dict_class(self) -> type:
++    def dict_class(self) -> typing.Type[type]:
+         return OrderedDict if self.ordered else dict
+ 
+     @property
+-    def set_class(self) -> type:
++    def set_class(self) -> typing.Type[type]:
+         return OrderedSet if self.ordered else set
+ 
+     @classmethod

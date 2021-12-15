@@ -1,0 +1,85 @@
+[tool.althaia]
+upstream_version = "3.14.1"
+
+[tool.poetry]
+name = "althaia"
+version = "3.14.1.dev1"
+description = "Marshmallow fork optimized for dumping speed."
+authors = ["Dusko Simidzija <dusko.simidzija@gmail.com>"]
+maintainers = ["Dusko Simidzija <dusko.simidzija@gmail.com>"]
+homepage = "https://dsimidzija.github.io"
+repository = "https://github.com/dsimidzija/python-althaia"
+license = "MIT"
+readme = "README.md"
+keywords = [
+    "serialization",
+    "rest",
+    "json",
+    "api",
+    "marshal",
+    "marshalling",
+    "deserialization",
+    "validation",
+    "schema",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+exclude = [
+    "**/.gitignore",
+    "althaia/**/*.orig",
+    "althaia/**/*.rej",
+    "upstream",
+]
+include = [
+    "README.md",
+    "althaia/**/*.so",
+    "althaia/**/*.py",
+]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+
+[tool.poetry.dev-dependencies]
+Cython = "^0.29.21"
+dsi-utils = {git = "https://github.com/dsimidzija/python-dsi-utils.git", rev = "master"}
+pep440 = "^0.1.0"
+taskipy = "^1.9.0"
+toml = "^0.10.2"
+twine = "^3.7.1"
+# everything below is needed by upstream marshmallow tests
+pytest = "^6.2.5"
+pytz = "^2021.3"
+simplejson = "^3.17.6"
+
+[tool.poetry.build]
+script = "build.py"
+generate-setup-file = false
+
+[build-system]
+requires = ["poetry_core>=1.0.0", "Cython"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "tests",
+]
+
+[tool.taskipy.tasks]
+version-check = { cmd = "./scripts/version_check.sh" }
+build = { cmd = "task upstream-reset && task build-wheel", help = "Full build, resets upstream submodule, applies patches, builds wheel." }
+build-wheel = { cmd = "poetry build --format wheel", help = "Build a python wheel using the current state of the repo." }
+inspect = { cmd = "unzip -l 'dist/*.whl'", help = "List the content of all wheels in dist/ folder." }
+upstream-performance = { cmd = "./scripts/upstream_performance.sh", help = "Run upstream marshmallow performance benchmark on top of Althaia." }
+upstream-reset = { cmd = "./scripts/upstream_reset.sh", help = "Reset upstream submodule to the version defined in pyproject.toml." }
+upstream-test = { cmd = "./scripts/upstream_test.sh", help = "Run upstream marshmallow tests on top of Althaia to check if we're 100% compatible." }
+publish-test = { cmd = "twine upload --skip-existing --repository testpypi dist/*.whl", help = "Publishing dry-run to test PyPI."}
