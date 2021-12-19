@@ -52,7 +52,6 @@ def apply_patches():
                 str(patch_path)
             ],
             capture_output=True,
-            check=True,
         )
 
 
@@ -77,13 +76,17 @@ def cythonize_patched() -> List[Extension]:
         nthreads=multiprocessing.cpu_count() * 2,
         compiler_directives={"language_level": "3"},
         force=False,
+        verbose=5,
     )
 
 
 def build():
-    clean_build()
-    copy_upstream_source()
-    apply_patches()
+    # if source dir doesn't exist, this is a sdist build and patches are already applied
+    # otherwise, we're in dev mode
+    if SOURCE_DIR.exists():
+        clean_build()
+        copy_upstream_source()
+        apply_patches()
     distribution = Distribution({
         "ext_modules": cythonize_patched(),
         "cmdclass": {

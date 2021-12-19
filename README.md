@@ -8,7 +8,7 @@ Althaia is a very simple fork of [marshmallow][], with patches to improve the pe
 of data. It is then also compiled via [cython][] for some extra performance boost. Ideally, these patches will
 one day find their way into the upstream marshmallow in some cleaner form, and this package will become obsolete.
 
-## How?
+## How does it work?
 
 During the serialization process, marshmallow repeats a lot of lookup operations for each object it's attempting to
 serialize, even though these values never change during the single execution. The main patch in this repo is
@@ -133,6 +133,14 @@ Preparing a new version TL;DR:
 * [Optional] Run `poetry run task upstream-performance`.
 * [Optional] Inspect the wheel content with `poetry run task inspect`.
 * Run `poetry run task publish-test` to deploy to test PyPI.
+
+## Known Issues
+
+* If you have any marshmallow warnings ignored in your `pytest.ini`, i.e. you have `filterwarnings` set up
+  to ignore an error starting with `marshmallow.warnings`, you will get an import error even if you're doing
+  `althaia.patch()` in your `conftest.py`. As a workaround, you can change it to start with
+  `althaia.marshmallow.warnings`. This happens because pytest is trying to import marshmallow before Althaia
+  gets a chance to patch the importer.
 
 [marshmallow]: https://github.com/marshmallow-code/marshmallow
 [cython]: https://github.com/cython/cython

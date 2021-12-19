@@ -3,7 +3,7 @@ upstream_version = "3.14.1"
 
 [tool.poetry]
 name = "althaia"
-version = "3.14.1.dev1"
+version = "3.14.1.dev3"
 description = "Marshmallow fork optimized for dumping speed."
 authors = ["Dusko Simidzija <dusko.simidzija@gmail.com>"]
 maintainers = ["Dusko Simidzija <dusko.simidzija@gmail.com>"]
@@ -33,16 +33,19 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
 ]
+packages = [
+	{ include = 'althaia/**/*.py' },
+]
+include = [
+    { path = "README.md" },
+    { path = "althaia/**/*.py" },
+    { path = "althaia/**/*.so", format = "wheel" },
+]
 exclude = [
     "**/.gitignore",
     "althaia/**/*.orig",
     "althaia/**/*.rej",
     "upstream",
-]
-include = [
-    "README.md",
-    "althaia/**/*.so",
-    "althaia/**/*.py",
 ]
 
 [tool.poetry.dependencies]
@@ -61,7 +64,7 @@ pytz = "^2021.3"
 simplejson = "^3.17.6"
 
 [tool.poetry.build]
-script = "build.py"
+script = "builder.py"
 generate-setup-file = false
 
 [build-system]
@@ -69,7 +72,7 @@ requires = [
     "Cython",
     "poetry",
     "poetry_core>=1.0.0",
-    "setuptools>=59.6.0",
+    "setuptools>=59.2.0",
 ]
 build-backend = "poetry.core.masonry.api"
 
@@ -83,9 +86,41 @@ testpaths = [
 version-check = { cmd = "./scripts/version_check.sh" }
 build = { cmd = "task upstream-reset && task build-wheel", help = "Full build, resets upstream submodule, applies patches, builds wheel." }
 build-wheel = { cmd = "poetry build --format wheel", help = "Build a python wheel using the current state of the repo." }
+build-sdist = { cmd = "poetry build --format sdist", help = "Build a sdist package using the current state of the repo." }
 clean = { cmd = "rm -rf ./althaia/marshmallow/*.so", help = "Clean compiled modules." }
 inspect = { cmd = "unzip -l 'dist/*.whl'", help = "List the content of all wheels in dist/ folder." }
 upstream-performance = { cmd = "./scripts/upstream_performance.sh", help = "Run upstream marshmallow performance benchmark on top of Althaia." }
 upstream-reset = { cmd = "./scripts/upstream_reset.sh", help = "Reset upstream submodule to the version defined in pyproject.toml." }
 upstream-test = { cmd = "./scripts/upstream_test.sh", help = "Run upstream marshmallow tests on top of Althaia to check if we're 100% compatible." }
 publish-test = { cmd = "twine upload --skip-existing --repository testpypi dist/*.whl", help = "Publishing dry-run to test PyPI."}
+
+[tool.cibuildwheel]
+build-frontend = "build"
+build-verbosity = 3
+# before-build is necessary, but I'm not sure why, as
+# cibuildwheel is not picking up cython from `build-system.requires`
+before-build = "python -m pip install cython"
+manylinux-x86_64-image = "manylinux2014"
+musllinux-x86_64-image = "musllinux_1_1"
+test-command = [
+    "mkdir -p /tmp/tests",
+    "ls -lR {project}",
+    "cp {project}/upstream/tests/*.py /tmp/tests",
+    "cd /tmp",
+    "echo 'import althaia; althaia.patch()'>>tests/__init__.py",
+    "pytest tests",
+    "rm -rf /tmp/tests",
+]
+test-requires = [
+    "poetry",
+    "pytest",
+    "pytz",
+    "simplejson",
+    "taskipy",
+]
+
+[tool.cibuildwheel.macos]
+archs = [
+    "x86_64",
+    #"universal2",
+]

@@ -1,0 +1,144 @@
+name: Build Wheels
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy-pypi-test:
+        description: Deploy Test PyPI?
+        required: true
+        default: "yes"
+      deploy-pypi-production:
+        description: Deploy Production PyPI?
+        required: true
+        default: "no"
+
+jobs:
+  build-sdist:
+    name: Build sdist package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Althaia
+        uses: actions/checkout@v2
+        with:
+          submodules: "recursive"
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+      - name: Install Poetry
+        run: |
+          export POETRY_HOME=/opt/poetry
+          mkdir -p $POETRY_HOME
+          curl -sSL https://install.python-poetry.org | python3 -
+          pip install taskipy
+      - name: Build sdist
+        run: |
+          export PATH="/opt/poetry/bin:$PATH"
+          poetry run task build-sdist
+      - uses: actions/upload-artifact@v2
+        if: ${{ !env.ACT }}
+        with:
+          name: wheels
+          path: ./dist/*.tar.gz
+  # copied from NumPy repo, and tweaked for our needs:
+  # https://github.com/numpy/numpy/blob/main/.github/workflows/wheels.yml
+  build-wheels:
+    name: Build wheel for ${{ matrix.python }}-${{ matrix.buildplat[1] }}
+    runs-on: ${{ matrix.buildplat[0] }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Github Actions doesn't support pairing matrix values together, let's improvise
+        # https://github.com/github/feedback/discussions/7835#discussioncomment-1769026
+        buildplat:
+          - [ubuntu-20.04, manylinux_x86_64]
+          - [ubuntu-20.04, musllinux_x86_64]
+          - [macos-10.15, macosx_*]
+          #- [windows-2019, win_amd64]
+        python: ["cp38", "cp39", "cp310"]
+        #python: ["cp310"]
+        include:
+          # manylinux pypy builds
+          - buildplat: [ubuntu-20.04, manylinux_x86_64]
+            python: pp38
+
+          # MacOS PyPy builds
+          # Disabled for now because of a PyPy bug
+          # that prevents successful compilation
+          #- buildplat: [macos-10.15, macosx_x86_64]
+          #  python: "pp38"
+
+          # Windows PyPy builds
+          #- buildplat: [windows-2019, win_amd64]
+          #  python: "pp38"
+
+    steps:
+      - name: Checkout Althaia
+        uses: actions/checkout@v2
+        with:
+          submodules: "recursive"
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+      - name: Fix missing dependencies
+        run: |
+          python -m pip install pipx
+          python -m pipx ensurepath
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.3.0
+        with:
+          output-dir: dist
+        env:
+          # most CIBW_* vars are in pyproject.toml
+          DISTUTILS_DEBUG: '1'
+          CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}
+      - uses: actions/upload-artifact@v2
+        if: ${{ !env.ACT }}
+        with:
+          name: wheels
+          path: ./dist/*.whl
+      - name: Inspect
+        run: |
+          unzip -l 'dist/*.whl'
+
+  testpypi_upload:
+    runs-on: ubuntu-latest
+    environment: staging
+    if: ${{ github.event.inputs.deploy-pypi-test == 'yes' }}
+    needs:
+      - build-sdist
+      - build-wheels
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: wheels
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@v1.4.2
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
+          repository_url: ${{ secrets.PYPI_REPOSITORY }}
+          skip_existing: true
+          verbose: true
+
+  # TODO: move to a separate action w/ params for environment
+  prodpypi_upload:
+    runs-on: ubuntu-latest
+    environment: production
+    if: ${{ github.event.inputs.deploy-pypi-production == 'yes' }}
+    needs:
+      - build-sdist
+      - build-wheels
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: wheels
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@v1.4.2
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
+          repository_url: ${{ secrets.PYPI_REPOSITORY }}
+          skip_existing: true
+          verbose: true

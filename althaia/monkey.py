@@ -8,7 +8,12 @@ class AlthaiaImporter(Loader, MetaPathFinder):
         self._cache = {}
 
     def find_spec(self, fullname, path, target=None):
-        if not fullname.startswith("marshmallow"):
+        """Only return ModuleSpec if we can handle it.
+
+        We need to exactly match "marshmallow" and startswith("marshmallow.") because we
+        otherwise break things for packages such as `marshmallow_utils`.
+        """
+        if fullname != "marshmallow" and not fullname.startswith("marshmallow."):
             return None
 
         if fullname not in self._cache:
