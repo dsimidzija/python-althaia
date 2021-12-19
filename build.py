@@ -16,8 +16,18 @@ PATCHES_DIR = Path("patches")
 OUTPUT_DIR = Path("althaia/marshmallow/")
 
 
+def clean_build():
+    """Stage 1: Remove compiled modules from `althaia/marshmallow`.
+
+    This is necessary because the pipeline which compiles the wheels includes all the compiled
+    modules it finds, and for each successive build it includes all the binaries from previous versions.
+    """
+    for obj_path in OUTPUT_DIR.rglob("*.so"):
+        obj_path.unlink()
+
+
 def copy_upstream_source():
-    """Stage 1: Copy upstream marshmallow, and change all the import directives."""
+    """Stage 2: Copy upstream marshmallow, and change all the import directives."""
     for py_input_path in SOURCE_DIR.rglob("*.py"):
         with open(py_input_path) as py_input_file:
             content = py_input_file.read()
@@ -30,13 +40,24 @@ def copy_upstream_source():
 
 
 def apply_patches():
-    """Stage 2: Apply our performance patches."""
+    """Stage 3: Apply our performance patches."""
     for patch_path in PATCHES_DIR.rglob("*.patch"):
-        subprocess.run(["patch", "-p1", "-i", str(patch_path)], check=True)
+        subprocess.run(
+            [
+                "patch",
+                "--strip",
+                "1",
+                "--forward",
+                "--input",
+                str(patch_path)
+            ],
+            capture_output=True,
+            check=True,
+        )
 
 
 def cythonize_patched() -> List[Extension]:
-    """Stage 3: cythonize all althaia.marshmallow modules."""
+    """Stage 4: cythonize all althaia.marshmallow modules."""
     extension_modules: List[Extension] = []
 
     for py_file in OUTPUT_DIR.rglob("*.py"):
@@ -60,6 +81,7 @@ def cythonize_patched() -> List[Extension]:
 
 
 def build():
+    clean_build()
     copy_upstream_source()
     apply_patches()
     distribution = Distribution({

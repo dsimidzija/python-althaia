@@ -65,7 +65,12 @@ script = "build.py"
 generate-setup-file = false
 
 [build-system]
-requires = ["poetry_core>=1.0.0", "Cython"]
+requires = [
+    "Cython",
+    "poetry",
+    "poetry_core>=1.0.0",
+    "setuptools>=59.6.0",
+]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
@@ -78,6 +83,7 @@ testpaths = [
 version-check = { cmd = "./scripts/version_check.sh" }
 build = { cmd = "task upstream-reset && task build-wheel", help = "Full build, resets upstream submodule, applies patches, builds wheel." }
 build-wheel = { cmd = "poetry build --format wheel", help = "Build a python wheel using the current state of the repo." }
+clean = { cmd = "rm -rf ./althaia/marshmallow/*.so", help = "Clean compiled modules." }
 inspect = { cmd = "unzip -l 'dist/*.whl'", help = "List the content of all wheels in dist/ folder." }
 upstream-performance = { cmd = "./scripts/upstream_performance.sh", help = "Run upstream marshmallow performance benchmark on top of Althaia." }
 upstream-reset = { cmd = "./scripts/upstream_reset.sh", help = "Reset upstream submodule to the version defined in pyproject.toml." }
