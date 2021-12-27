@@ -1,5 +1,9 @@
 # Althaia
 
+[![PyPI Version](https://badgen.net/pypi/v/althaia)](https://pypi.org/project/althaia/)
+[![License](https://badgen.net/pypi/license/althaia)](https://pypi.org/project/althaia/)
+[![PyPI Python](https://badgen.net/pypi/python/althaia)](https://pypi.org/project/althaia/)
+
 Althaia: _from Latin althaea, from Greek althaia - marsh mallow (literally: healing plant), from Greek althein to heal_
 
 ## What is it?
