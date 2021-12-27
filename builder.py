@@ -1,6 +1,8 @@
 # inspired by:
 # https://d39l7znklsxxzt.cloudfront.net/zh/blog/2021/01/19/publishing-a-proprietary-python-package-on-pypi-using-poetry/
 import multiprocessing
+import os
+import platform
 import subprocess
 from pathlib import Path
 from typing import List
@@ -23,6 +25,8 @@ def clean_build():
     modules it finds, and for each successive build it includes all the binaries from previous versions.
     """
     for obj_path in OUTPUT_DIR.rglob("*.so"):
+        obj_path.unlink()
+    for obj_path in OUTPUT_DIR.rglob("*.pyd"):
         obj_path.unlink()
 
 
@@ -60,8 +64,12 @@ def cythonize_patched() -> List[Extension]:
     extension_modules: List[Extension] = []
 
     for py_file in OUTPUT_DIR.rglob("*.py"):
+        # skip __init__.py on windows, as it causes a weird linking error:
+        # https://github.com/cython/cython/issues/2968
+        if platform.system() == "Windows" and "__init__" in str(py_file):
+            continue
         module_path = py_file.with_suffix("")
-        module_path = str(module_path).replace("/", ".")
+        module_path = str(module_path).replace(os.sep, ".")
         extension_module = Extension(
             name=module_path,
             sources=[str(py_file)],

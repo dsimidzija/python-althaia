@@ -3,7 +3,7 @@ upstream_version = "3.14.1"
 
 [tool.poetry]
 name = "althaia"
-version = "3.14.1.dev3"
+version = "3.14.1.dev4"
 description = "Marshmallow fork optimized for dumping speed."
 authors = ["Dusko Simidzija <dusko.simidzija@gmail.com>"]
 maintainers = ["Dusko Simidzija <dusko.simidzija@gmail.com>"]
@@ -34,12 +34,13 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 packages = [
-	{ include = 'althaia/**/*.py' },
+    { include = 'althaia/**/*.py' },
 ]
 include = [
     { path = "README.md" },
     { path = "althaia/**/*.py" },
     { path = "althaia/**/*.so", format = "wheel" },
+    { path = "althaia/**/*.pyd", format = "wheel" },
 ]
 exclude = [
     "**/.gitignore",
@@ -104,7 +105,6 @@ manylinux-x86_64-image = "manylinux2014"
 musllinux-x86_64-image = "musllinux_1_1"
 test-command = [
     "mkdir -p /tmp/tests",
-    "ls -lR {project}",
     "cp {project}/upstream/tests/*.py /tmp/tests",
     "cd /tmp",
     "echo 'import althaia; althaia.patch()'>>tests/__init__.py",
@@ -119,8 +119,25 @@ test-requires = [
     "taskipy",
 ]
 
+[tool.cibuildwheel.linux]
+environment = { LDFLAGS = "-Wl,--strip-debug" }
+
 [tool.cibuildwheel.macos]
 archs = [
     "x86_64",
     #"universal2",
+]
+
+[tool.cibuildwheel.windows]
+archs = [
+    "AMD64",
+]
+# "-Wl,-S" is equivalent to gcc's "-Wl,--strip-debug"
+environment = { LDFLAGS = "-Wl,-S" }
+test-command = [
+    "mkdir %TEMP%\\althaia\\tests",
+    "xcopy {project}\\upstream\\tests\\*.py %TEMP%\\althaia\\tests",
+    "cd %TEMP%\\althaia",
+    "python -c \"fin = open(\\\"tests\\conftest.py\\\", \\\"r\\\"); cont = fin.read(); fin.close(); cont = cont.replace(\\\"import pytest\\\", \\\"import althaia;althaia.patch();import pytest\\\"); fout = open(\\\"tests\\conftest.py\\\", \\\"w\\\"); fout.write(cont); fout.close();\"",
+    "pytest tests",
 ]
