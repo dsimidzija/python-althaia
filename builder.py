@@ -95,15 +95,19 @@ def build():
         clean_build()
         copy_upstream_source()
         apply_patches()
-    distribution = Distribution({
-        "ext_modules": cythonize_patched(),
-        "cmdclass": {
-            "build_ext": cython_build_ext,
-        },
-    })
-    distribution.run_command("build_ext")
-    build_ext_cmd = distribution.get_command_obj("build_ext")
-    build_ext_cmd.copy_extensions_to_source()
+
+    # while the patches themselves bring some minor speedup on PyPy,
+    # the compiled modules slow it down enormously
+    if platform.python_implementation() != "PyPy":
+        distribution = Distribution({
+            "ext_modules": cythonize_patched(),
+            "cmdclass": {
+                "build_ext": cython_build_ext,
+            },
+        })
+        distribution.run_command("build_ext")
+        build_ext_cmd = distribution.get_command_obj("build_ext")
+        build_ext_cmd.copy_extensions_to_source()
 
 
 if __name__ == "__main__":
