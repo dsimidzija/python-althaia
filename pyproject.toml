@@ -123,9 +123,6 @@ test-requires = [
 environment = { LDFLAGS = "-Wl,--strip-debug" }
 
 [tool.cibuildwheel.windows]
-archs = [
-    "AMD64",
-]
 # "-Wl,-S" is equivalent to gcc's "-Wl,--strip-debug"
 environment = { LDFLAGS = "-Wl,-S" }
 test-command = [
