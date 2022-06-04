@@ -3,6 +3,7 @@
 [![PyPI Version](https://badgen.net/pypi/v/althaia)](https://pypi.org/project/althaia/)
 [![License](https://badgen.net/pypi/license/althaia)](https://pypi.org/project/althaia/)
 [![PyPI Python](https://badgen.net/pypi/python/althaia)](https://pypi.org/project/althaia/)
+[![Downloads](https://pepy.tech/badge/althaia)](https://pepy.tech/project/althaia)
 
 Althaia: _from Latin althaea, from Greek althaia - marsh mallow (literally: healing plant), from Greek althein to heal_
 
@@ -41,7 +42,9 @@ The table is the result of the following commands:
     python performance/benchmark.py --iterations=5 --repeat=5 --object-count 20000
     python performance/benchmark.py --iterations=10 --repeat=10 --object-count 10000
 
-They are also available in this repo as `poetry run task upstream-performance`.
+They are also available in this repo as `poetry run task upstream-performance`. Note that you may get different
+results while running the benchmarks (the numbers above were obtained with Althaia v3.14.1, generally speaking you
+should be getting better results with newer versions).
 
 Contribution into the [serialization benchmark][] is in the works, but local run seems to be almost comparable to
 [Toasted Marshmallow][], which is stuck on an old marshmallow 2.x branch. This means that Althaia gives you (almost)

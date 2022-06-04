@@ -3,6 +3,7 @@
 import multiprocessing
 import os
 import platform
+import shutil
 import subprocess
 from pathlib import Path
 from typing import List
@@ -27,6 +28,8 @@ def clean_build():
     for obj_path in OUTPUT_DIR.rglob("*.so"):
         obj_path.unlink()
     for obj_path in OUTPUT_DIR.rglob("*.pyd"):
+        obj_path.unlink()
+    for obj_path in OUTPUT_DIR.rglob("*.rej"):
         obj_path.unlink()
 
 
@@ -57,6 +60,9 @@ def apply_patches():
             ],
             capture_output=True,
         )
+
+    if any(OUTPUT_DIR.rglob("*.rej")):
+        raise RuntimeError("Patch(es) not applied properly.")
 
 
 def cythonize_patched() -> List[Extension]:
@@ -107,7 +113,14 @@ def build():
         })
         distribution.run_command("build_ext")
         build_ext_cmd = distribution.get_command_obj("build_ext")
-        build_ext_cmd.copy_extensions_to_source()
+
+        # 2022-06: no idea why build_ext_cmd.copy_extensions_to_source() stopped working suddenly
+        for output in build_ext_cmd.get_outputs():
+            relative_extension = os.path.relpath(output, build_ext_cmd.build_lib)
+            shutil.copyfile(output, relative_extension)
+            mode = os.stat(relative_extension).st_mode
+            mode |= (mode & 0o444) >> 2
+            os.chmod(relative_extension, mode)
 
 
 if __name__ == "__main__":

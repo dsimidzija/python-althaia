@@ -1,20 +1,28 @@
-from althaia.marshmallow.schema import Schema, SchemaOpts
+from __future__ import annotations
 
-from . import fields
+from packaging.version import Version
+
 from althaia.marshmallow.decorators import (
-    pre_dump,
     post_dump,
-    pre_load,
     post_load,
+    pre_dump,
+    pre_load,
     validates,
     validates_schema,
 )
-from althaia.marshmallow.utils import EXCLUDE, INCLUDE, RAISE, pprint, missing
 from althaia.marshmallow.exceptions import ValidationError
-from distutils.version import LooseVersion
+from althaia.marshmallow.schema import Schema, SchemaOpts
+from althaia.marshmallow.utils import EXCLUDE, INCLUDE, RAISE, missing, pprint
 
-__version__ = "3.14.1"
-__version_info__ = tuple(LooseVersion(__version__).version)
+from . import fields
+
+__version__ = "3.16.0"
+__parsed_version__ = Version(__version__)
+__version_info__: tuple[int, int, int] | tuple[
+    int, int, int, str, int
+] = __parsed_version__.release  # type: ignore[assignment]
+if __parsed_version__.pre:
+    __version_info__ += __parsed_version__.pre  # type: ignore[assignment]
 __all__ = [
     "EXCLUDE",
     "INCLUDE",

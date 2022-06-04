@@ -85,7 +85,7 @@ jobs:
           python -m pip install pipx
           python -m pipx ensurepath
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.3.0
+        uses: pypa/cibuildwheel@v2.6.0
         with:
           output-dir: dist
         env:

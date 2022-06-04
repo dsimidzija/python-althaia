@@ -1,5 +1,6 @@
 import importlib
 import sys
+import warnings
 from importlib.abc import Loader, MetaPathFinder
 
 
@@ -35,4 +36,7 @@ class AlthaiaImporter(Loader, MetaPathFinder):
 
 
 def patch():
+    if any(isinstance(importer, AlthaiaImporter) for importer in sys.meta_path):
+        warnings.warn("Multiple calls to althaia.patch, skipping")
+        return
     sys.meta_path.insert(0, AlthaiaImporter())
