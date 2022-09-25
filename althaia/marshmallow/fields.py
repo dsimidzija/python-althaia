@@ -11,6 +11,7 @@ import decimal
 import math
 import typing
 import warnings
+from enum import Enum as EnumType
 from collections.abc import Mapping as _Mapping
 
 from althaia.marshmallow import validate, utils, class_registry, types
@@ -61,6 +62,7 @@ __all__ = [
     "IPInterface",
     "IPv4Interface",
     "IPv6Interface",
+    "Enum",
     "Method",
     "Function",
     "Str",
@@ -430,7 +432,9 @@ class Field(FieldABC):
             self.parent.root if isinstance(self.parent, FieldABC) else self.parent
         )
 
-    def _serialize(self, value: typing.Any, attr: str, obj: typing.Any, **kwargs):
+    def _serialize(
+        self, value: typing.Any, attr: str | None, obj: typing.Any, **kwargs
+    ):
         """Serializes ``value`` to a basic Python datatype. Noop by default.
         Concrete :class:`Field` classes should implement this method.
 
@@ -1041,11 +1045,7 @@ class Integer(Number):
 
     # override Number
     def _validated(self, value):
-        if self.strict:
-            if isinstance(value, numbers.Number) and isinstance(
-                value, numbers.Integral
-            ):
-                return super()._validated(value)
+        if self.strict and not isinstance(value, numbers.Integral):
             raise self.make_error("invalid", input=value)
         return super()._validated(value)
 
@@ -1238,7 +1238,7 @@ class Boolean(Field):
         try:
             if value in self.truthy:
                 return True
-            elif value in self.falsy:
+            if value in self.falsy:
                 return False
         except TypeError:
             pass
@@ -1248,14 +1248,13 @@ class Boolean(Field):
     def _deserialize(self, value, attr, data, **kwargs):
         if not self.truthy:
             return bool(value)
-        else:
-            try:
-                if value in self.truthy:
-                    return True
-                elif value in self.falsy:
-                    return False
-            except TypeError as error:
-                raise self.make_error("invalid", input=value) from error
+        try:
+            if value in self.truthy:
+                return True
+            if value in self.falsy:
+                return False
+        except TypeError as error:
+            raise self.make_error("invalid", input=value) from error
         raise self.make_error("invalid", input=value)
 
 
@@ -1480,17 +1479,35 @@ class Date(DateTime):
 
 class TimeDelta(Field):
     """A field that (de)serializes a :class:`datetime.timedelta` object to an
-    integer and vice versa. The integer can represent the number of days,
-    seconds or microseconds.
+    integer or float and vice versa. The integer or float can represent the
+    number of days, seconds or microseconds.
 
-    :param precision: Influences how the integer is interpreted during
+    :param precision: Influences how the integer or float is interpreted during
         (de)serialization. Must be 'days', 'seconds', 'microseconds',
         'milliseconds', 'minutes', 'hours' or 'weeks'.
+    :param serialization_type: Whether to (de)serialize to a `int` or `float`.
     :param kwargs: The same keyword arguments that :class:`Field` receives.
+
+    Integer Caveats
+    ---------------
+    Any fractional parts (which depends on the precision used) will be truncated
+    when serializing using `int`.
+
+    Float Caveats
+    -------------
+    Use of `float` when (de)serializing may result in data precision loss due
+    to the way machines handle floating point values.
+
+    Regardless of the precision chosen, the fractional part when using `float`
+    will always be truncated to microseconds.
+    For example, `1.12345` interpreted as microseconds will result in `timedelta(microseconds=1)`.
 
     .. versionchanged:: 2.0.0
         Always serializes to an integer value to avoid rounding errors.
         Add `precision` parameter.
+    .. versionchanged:: 3.17.0
+        Allow (de)serialization to `float` through use of a new `serialization_type` parameter.
+        `int` is the default to retain previous behaviour.
     """
 
     DAYS = "days"
@@ -1507,7 +1524,12 @@ class TimeDelta(Field):
         "format": "{input!r} cannot be formatted as a timedelta.",
     }
 
-    def __init__(self, precision: str = SECONDS, **kwargs):
+    def __init__(
+        self,
+        precision: str = SECONDS,
+        serialization_type: type[int | float] = int,
+        **kwargs,
+    ):
         precision = precision.lower()
         units = (
             self.DAYS,
@@ -1525,20 +1547,30 @@ class TimeDelta(Field):
             )
             raise ValueError(msg)
 
+        if serialization_type not in (int, float):
+            raise ValueError("The serialization type must be one of int or float")
+
         self.precision = precision
+        self.serialization_type = serialization_type
         super().__init__(**kwargs)
 
     def _serialize(self, value, attr, obj, **kwargs):
         if value is None:
             return None
+
         base_unit = dt.timedelta(**{self.precision: 1})
-        delta = utils.timedelta_to_microseconds(value)
-        unit = utils.timedelta_to_microseconds(base_unit)
-        return delta // unit
+
+        if self.serialization_type is int:
+            delta = utils.timedelta_to_microseconds(value)
+            unit = utils.timedelta_to_microseconds(base_unit)
+            return delta // unit
+        else:
+            assert self.serialization_type is float
+            return value.total_seconds() / base_unit.total_seconds()
 
     def _deserialize(self, value, attr, data, **kwargs):
         try:
-            value = int(value)
+            value = self.serialization_type(value)
         except (TypeError, ValueError) as error:
             raise self.make_error("invalid") from error
 
@@ -1745,7 +1777,7 @@ class Email(String):
     #: Default error messages.
     default_error_messages = {"invalid": "Not a valid email address."}
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         # Insert validation into self.validators so that multiple errors can be stored.
         validator = validate.Email(error=self.error_messages["invalid"])
@@ -1814,7 +1846,7 @@ class IPv6(IP):
 class IPInterface(Field):
     """A IPInterface field.
 
-    IP interface is the non-stict form of the IPNetwork type where arbitrary host
+    IP interface is the non-strict form of the IPNetwork type where arbitrary host
     addresses are always accepted.
 
     IPAddress and mask e.g. '192.168.0.2/24' or '192.168.0.2/255.255.255.0'
@@ -1829,7 +1861,7 @@ class IPInterface(Field):
 
     DESERIALIZATION_CLASS = None  # type: typing.Optional[typing.Type]
 
-    def __init__(self, *args, exploded=False, **kwargs):
+    def __init__(self, *args, exploded: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
         self.exploded = exploded
 
@@ -1867,6 +1899,79 @@ class IPv6Interface(IPInterface):
     default_error_messages = {"invalid_ip_interface": "Not a valid IPv6 interface."}
 
     DESERIALIZATION_CLASS = ipaddress.IPv6Interface
+
+
+class Enum(Field):
+    """An Enum field (de)serializing enum members by symbol (name) or by value.
+
+    :param enum Enum: Enum class
+    :param boolean|Schema|Field by_value: Whether to (de)serialize by value or by name,
+        or Field class or instance to use to (de)serialize by value. Defaults to False.
+
+    If `by_value` is `False` (default), enum members are (de)serialized by symbol (name).
+    If it is `True`, they are (de)serialized by value using :class:`Field`.
+    If it is a field instance or class, they are (de)serialized by value using this field.
+
+    .. versionadded:: 3.18.0
+    """
+
+    default_error_messages = {
+        "unknown": "Must be one of: {choices}.",
+    }
+
+    def __init__(
+        self,
+        enum: type[EnumType],
+        *,
+        by_value: bool | Field | type = False,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.enum = enum
+        self.by_value = by_value
+
+        # Serialization by name
+        if by_value is False:
+            self.field: Field = String()
+            self.choices_text = ", ".join(
+                str(self.field._serialize(m, None, None)) for m in enum.__members__
+            )
+        # Serialization by value
+        else:
+            if by_value is True:
+                self.field = Field()
+            else:
+                try:
+                    self.field = resolve_field_instance(by_value)
+                except FieldInstanceResolutionError as error:
+                    raise ValueError(
+                        '"by_value" must be either a bool or a subclass or instance of '
+                        "marshmallow.base.FieldABC."
+                    ) from error
+            self.choices_text = ", ".join(
+                str(self.field._serialize(m.value, None, None)) for m in enum
+            )
+
+    def _serialize(self, value, attr, obj, **kwargs):
+        if value is None:
+            return None
+        if self.by_value:
+            val = value.value
+        else:
+            val = value.name
+        return self.field._serialize(val, attr, obj, **kwargs)
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        val = self.field._deserialize(value, attr, data, **kwargs)
+        if self.by_value:
+            try:
+                return self.enum(val)
+            except ValueError as error:
+                raise self.make_error("unknown", choices=self.choices_text) from error
+        try:
+            return getattr(self.enum, val)
+        except AttributeError as error:
+            raise self.make_error("unknown", choices=self.choices_text) from error
 
 
 class Method(Field):

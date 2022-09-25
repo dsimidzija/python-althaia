@@ -1,9 +1,9 @@
 [tool.althaia]
-upstream_version = "3.16.0"
+upstream_version = "3.18.0"
 
 [tool.poetry]
 name = "althaia"
-version = "3.16.0dev1"
+version = "3.18.0"
 description = "Marshmallow fork optimized for dumping speed."
 authors = ["Dusko Simidzija <dusko.simidzija@gmail.com>"]
 maintainers = ["Dusko Simidzija <dusko.simidzija@gmail.com>"]
@@ -23,7 +23,7 @@ keywords = [
     "schema",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
@@ -54,7 +54,8 @@ python = "^3.7"
 packaging = "^17.0"
 
 [tool.poetry.dev-dependencies]
-Cython = "^3.0.0a10"
+# updating to a11 breaks everything for some reason, probably a cython bug
+Cython = "3.0.0a10"
 dsi-utils = {git = "https://github.com/dsimidzija/python-dsi-utils.git", rev = "master"}
 pep440 = "^0.1.0"
 taskipy = "^1.9.0"
@@ -71,7 +72,7 @@ generate-setup-file = false
 
 [build-system]
 requires = [
-    "Cython>=3.0.0a10",
+    "Cython==3.0.0a10",
     "poetry",
     "poetry_core>=1.0.0",
     "setuptools>=62.3.2",
@@ -101,7 +102,7 @@ build-frontend = "build"
 build-verbosity = 3
 # before-build is necessary, but I'm not sure why, as
 # cibuildwheel is not picking up cython from `build-system.requires`
-before-build = "python -m pip install 'cython>=3.0.0a10'"
+before-build = "python -m pip install cython==3.0.0a10"
 manylinux-x86_64-image = "manylinux2014"
 musllinux-x86_64-image = "musllinux_1_1"
 test-command = [

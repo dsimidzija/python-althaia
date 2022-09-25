@@ -27,14 +27,14 @@ Check out the original [upstream PR][] for some discussion.
 ## How fast is it?
 
 It really depends on your data and usage, but using the `benchmark.py` test from the upstream marshmallow repo,
-Althaia seems to shave off some ~45% of execution time on average. These values are an example test run results
+Althaia seems to shave off some ~55% of execution time on average. These values are an example test run results
 from the upstream benchmark:
 
 | Upstream(usec/dump) | Althaia(usec/dump) | Improvement(%) |
 |--------------------:|-------------------:|---------------:|
-|            22672.54 |           11969.85 |          52.80 |
-|           463016.55 |          267486.80 |          57.78 |
-|           231068.86 |          128756.36 |          55.72 |
+|            23586.67 |           10033.57 |          42.54 |
+|           478799.10 |          211586.81 |          44.19 |
+|           231851.84 |          102877.19 |          44.37 |
 
 The table is the result of the following commands:
 
@@ -43,12 +43,13 @@ The table is the result of the following commands:
     python performance/benchmark.py --iterations=10 --repeat=10 --object-count 10000
 
 They are also available in this repo as `poetry run task upstream-performance`. Note that you may get different
-results while running the benchmarks (the numbers above were obtained with Althaia v3.14.1, generally speaking you
+results while running the benchmarks (the numbers above were obtained with Althaia v3.18.0, generally speaking you
 should be getting better results with newer versions).
 
-Contribution into the [serialization benchmark][] is in the works, but local run seems to be almost comparable to
-[Toasted Marshmallow][], which is stuck on an old marshmallow 2.x branch. This means that Althaia gives you (almost)
-the speed of Toasted Marshmallow, with all the goodies of the latest marshmallow.
+Contribution into the [serialization benchmark][] is in the works (update: [stalled][serialization-stalled]), but
+local run seems to be almost comparable to [Toasted Marshmallow][], which is stuck on an old marshmallow 2.x branch.
+This means that Althaia gives you (almost) the speed of Toasted Marshmallow, with all the goodies of the latest
+marshmallow.
 
 | Library               | Many Objects (seconds)  | One Object (seconds) | Relative    |
 | --------------------  | ----------------------- | -------------------  | ----------  |
@@ -153,6 +154,7 @@ Preparing a new version TL;DR:
 [cython]: https://github.com/cython/cython
 [upstream PR]: https://github.com/marshmallow-code/marshmallow/pull/1649
 [serialization benchmark]: https://voidfiles.github.io/python-serialization-benchmark/
+[serialization-stalled]: https://github.com/voidfiles/python-serialization-benchmark/issues/26
 [Toasted Marshmallow]: https://github.com/lyft/toasted-marshmallow
 [marshmallow docs]: https://marshmallow.readthedocs.io/en/stable/
 [manylinux]: https://github.com/pypa/manylinux
