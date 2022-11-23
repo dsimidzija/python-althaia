@@ -51,7 +51,7 @@ exclude = [
 [tool.poetry.dependencies]
 python = "^3.7"
 # copied from marshmallow
-packaging = "^17.0"
+packaging = ">=17.0"
 
 [tool.poetry.dev-dependencies]
 # updating to a11 breaks everything for some reason, probably a cython bug
