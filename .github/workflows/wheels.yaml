@@ -53,6 +53,8 @@ jobs:
         buildplat:
           - [ubuntu-20.04, manylinux_x86_64]
           - [ubuntu-20.04, musllinux_x86_64]
+          - [ubuntu-20.04, manylinux_aarch64]
+          - [ubuntu-20.04, musllinux_aarch64]
           - [macos-11, macosx_x86_64]
           # not supported by github actions, see
           # https://github.com/actions/virtual-environments/issues/2187
