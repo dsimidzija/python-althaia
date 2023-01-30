@@ -93,6 +93,7 @@ jobs:
         env:
           # most CIBW_* vars are in pyproject.toml
           DISTUTILS_DEBUG: '1'
+          CIBW_ARCHS_LINUX: "auto aarch64"
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}
       - uses: actions/upload-artifact@v2
         if: ${{ !env.ACT }}
