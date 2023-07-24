@@ -67,12 +67,12 @@ index 12bb2f4..b755d53 100644
 --- a/althaia/marshmallow/schema.py
 +++ b/althaia/marshmallow/schema.py
 @@ -395,6 +394,9 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
-         self.fields = {}  # type: typing.Dict[str, ma_fields.Field]
-         self.load_fields = {}  # type: typing.Dict[str, ma_fields.Field]
-         self.dump_fields = {}  # type: typing.Dict[str, ma_fields.Field]
+         self.fields = {}  # type: typing.MutableMapping[str, ma_fields.Field]
+         self.load_fields = {}  # type: typing.MutableMapping[str, ma_fields.Field]
+         self.dump_fields = {}  # type: typing.MutableMapping[str, ma_fields.Field]
 +        self.dump_serializers = (
 +            self.dict_class()
-+        )  # type: typing.Dict[str, typing.Callable]
++        )  # type: typing.MutableMapping[str, typing.Callable]
          self._init_fields()
          messages = {}
          messages.update(self._default_error_messages)
@@ -126,12 +126,12 @@ index 12bb2f4..b755d53 100644
 +                    field_name, accessor
 +                )
 +
-+        source_obj = [None]  # typing: typing.List[typing.Any]
++        source_obj = [None]  # typing: typing.MutableSequence[typing.Any]
 +
 +        if not many:
 +            source_obj = [typing.cast(typing.Any, obj)]
 +        elif many and obj is not None:
-+            source_obj = typing.cast(typing.List[typing.Any], obj)
++            source_obj = typing.cast(typing.MutableSequence[typing.Any], obj)
 +
 +        output = []
 +        for current_obj in source_obj:

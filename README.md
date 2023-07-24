@@ -22,29 +22,31 @@ data sets.
 
 The entire thing is then compiled into C extension modules and released only as binary wheels.
 
-Check out the original [upstream PR][] for some discussion.
+Check out the original [upstream PR][] for some discussion, or my [original announcement][dsi-announcement].
 
 ## How fast is it?
 
 It really depends on your data and usage, but using the `benchmark.py` test from the upstream marshmallow repo,
-Althaia seems to shave off some ~55% of execution time on average. These values are an example test run results
+Althaia seems to shave off some ~30% of execution time on average. These values are an example test run results
 from the upstream benchmark:
 
 | Upstream(usec/dump) | Althaia(usec/dump) | Improvement(%) |
 |--------------------:|-------------------:|---------------:|
-|            23586.67 |           10033.57 |          42.54 |
-|           478799.10 |          211586.81 |          44.19 |
-|           231851.84 |          102877.19 |          44.37 |
+|              374.64 |             258.61 |         -30.97 |
+|            19189.83 |           13275.84 |         -30.81 |
+|           396368.67 |          275365.67 |         -30.52 |
+|           198163.58 |          133714.07 |         -32.52 |
 
 The table is the result of the following commands:
 
+    python performance/benchmark.py
     python performance/benchmark.py --object-count 1000
     python performance/benchmark.py --iterations=5 --repeat=5 --object-count 20000
     python performance/benchmark.py --iterations=10 --repeat=10 --object-count 10000
 
 They are also available in this repo as `poetry run task upstream-performance`. Note that you may get different
-results while running the benchmarks (the numbers above were obtained with Althaia v3.18.0, generally speaking you
-should be getting better results with newer versions).
+results while running the benchmarks (the numbers above were obtained with Althaia v3.20.1, generally speaking you
+should be getting better results with newer versions, but sometimes not).
 
 Contribution into the [serialization benchmark][] is in the works (update: [stalled][serialization-stalled]), but
 local run seems to be almost comparable to [Toasted Marshmallow][], which is stuck on an old marshmallow 2.x branch.
@@ -110,6 +112,8 @@ chances are that most bugs _will_ be upstream bugs.
 
 Contributing [manylinux][] builds for the CI pipeline is most welcome.
 
+**When opening pull requests, please target the `develop` branch by default.**
+
 If you have any other ideas on how to tweak the performance, feel free to contribute in any way you can!
 
 ## Versioning & Releases
@@ -149,6 +153,11 @@ Preparing a new version TL;DR:
   `althaia.patch()` in your `conftest.py`. As a workaround, you can change it to start with
   `althaia.marshmallow.warnings`. This happens because pytest is trying to import marshmallow before Althaia
   gets a chance to patch the importer.
+* Since althaia 3.20.1, the support for python3.7 and 3.8 has been dropped, unlike marshmallow which has dropped
+  support only for python3.7. The reason for this are massive changes in typing annotation starting from python3.9,
+  which are no longer supported by the recently released Cython 3.0.0. Maintaining patches for 3.8 and 3.9+
+  would be difficult without being a significant time sink. Since python3.8 is already in security-updates-only state,
+  it's much easier to just drop it.
 
 [marshmallow]: https://github.com/marshmallow-code/marshmallow
 [cython]: https://github.com/cython/cython
@@ -160,3 +169,4 @@ Preparing a new version TL;DR:
 [manylinux]: https://github.com/pypa/manylinux
 [Poetry]: https://python-poetry.org/
 [taskipy]: https://github.com/illBeRoy/taskipy
+[dsi-announcement]: http://dsimidzija.github.io/posts/introducing-althaia-speedy-marshmallow-fork/

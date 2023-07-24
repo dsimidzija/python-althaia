@@ -197,7 +197,12 @@ def from_timestamp(value: typing.Any) -> dt.datetime:
 
     # Load a timestamp with utc as timezone to prevent using system timezone.
     # Then set timezone to None, to let the Field handle adding timezone info.
-    return dt.datetime.fromtimestamp(value, tz=dt.timezone.utc).replace(tzinfo=None)
+    try:
+        return dt.datetime.fromtimestamp(value, tz=dt.timezone.utc).replace(tzinfo=None)
+    except OverflowError as exc:
+        raise ValueError("Timestamp is too large") from exc
+    except OSError as exc:
+        raise ValueError("Error converting value to datetime") from exc
 
 
 def from_timestamp_ms(value: typing.Any) -> dt.datetime:
@@ -290,7 +295,7 @@ def _get_value_for_key(obj, key, default):
         return getattr(obj, key, default)
 
 
-def set_value(dct: dict[str, typing.Any], key: str, value: typing.Any):
+def set_value(dct: typing.MutableMapping[str, typing.Any], key: str, value: typing.Any):
     """Set a value in a dict. If `key` contains a '.', it is assumed
     be a path (i.e. dot-delimited string) to the value's location.
 

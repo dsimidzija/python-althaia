@@ -1,8 +1,8 @@
 diff --git a/althaia/marshmallow/schema.py b/althaia/marshmallow/schema.py
-index 12bb2f4..9424b19 100644
+index 6f15a0f..64670f0 100644
 --- a/althaia/marshmallow/schema.py
 +++ b/althaia/marshmallow/schema.py
-@@ -126,10 +127,10 @@ return klass
+@@ -124,10 +124,10 @@ class SchemaMeta(ABCMeta):
      @classmethod
      def get_declared_fields(
          mcs,
@@ -10,12 +10,12 @@ index 12bb2f4..9424b19 100644
 +        klass: typing.Type[type],
          cls_fields: list,
          inherited_fields: list,
--        dict_cls: type,
-+        dict_cls: typing.Type[type],
+-        dict_cls: type = dict,
++        dict_cls: typing.Type[type] = dict,
      ):
          """Returns a dictionary of field_name => `Field` pairs declared on the class.
          This is exposed mainly so that plugins can add additional fields, e.g. fields
-@@ -408,11 +409,11 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
+@@ -411,7 +411,7 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
          )
  
      @property
@@ -23,9 +23,52 @@ index 12bb2f4..9424b19 100644
 +    def dict_class(self) -> typing.Type[type]:
          return OrderedDict if self.ordered else dict
  
-     @property
--    def set_class(self) -> type:
-+    def set_class(self) -> typing.Type[type]:
-         return OrderedSet if self.ordered else set
- 
      @classmethod
+diff --git a/althaia/marshmallow/utils.py b/althaia/marshmallow/utils.py
+index 757f4a8..3f64848 100644
+--- a/althaia/marshmallow/utils.py
++++ b/althaia/marshmallow/utils.py
+@@ -295,7 +295,7 @@ def _get_value_for_key(obj, key, default):
+         return getattr(obj, key, default)
+ 
+ 
+-def set_value(dct: dict[str, typing.Any], key: str, value: typing.Any):
++def set_value(dct: typing.MutableMapping[str, typing.Any], key: str, value: typing.Any):
+     """Set a value in a dict. If `key` contains a '.', it is assumed
+     be a path (i.e. dot-delimited string) to the value's location.
+ 
+diff --git a/althaia/marshmallow/validate.py b/althaia/marshmallow/validate.py
+index 3588a42..ec97726 100644
+--- a/althaia/marshmallow/validate.py
++++ b/althaia/marshmallow/validate.py
+@@ -201,7 +201,7 @@ class URL(Validator):
+     def _format_error(self, value) -> str:
+         return self.error.format(input=value)
+ 
+-    def __call__(self, value: str) -> str:
++    def __call__(self, value: str | None) -> str:
+         message = self._format_error(value)
+         if not value:
+             raise ValidationError(message)
+@@ -251,10 +251,10 @@ class Email(Validator):
+     def __init__(self, *, error: str | None = None):
+         self.error = error or self.default_message  # type: str
+ 
+-    def _format_error(self, value: str) -> str:
++    def _format_error(self, value: str | None) -> str:
+         return self.error.format(input=value)
+ 
+-    def __call__(self, value: str) -> str:
++    def __call__(self, value: str | None) -> str:
+         message = self._format_error(value)
+ 
+         if not value or "@" not in value:
+@@ -471,7 +471,7 @@ class Regexp(Validator):
+     def __init__(
+         self,
+         regex: str | bytes | typing.Pattern,
+-        flags: int = 0,
++        flags: int | re.RegexFlag = 0,
+         *,
+         error: str | None = None,
+     ):
