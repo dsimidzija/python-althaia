@@ -4,6 +4,11 @@
 
 * ?
 
+## 3.21.1
+
+* Added an additional handler to Althaia meta path finder to handle the new way marshmallow is exposing its version
+  and package information.
+
 ## 3.20.1
 
 * Prebuild wheels for aarch64 Linux now supported thanks to @hvalev

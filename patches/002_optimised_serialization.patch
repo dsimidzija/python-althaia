@@ -2,10 +2,10 @@ diff --git a/althaia/marshmallow/fields.py b/althaia/marshmallow/fields.py
 index d1cd88c..7af5b4a 100644
 --- a/althaia/marshmallow/fields.py
 +++ b/althaia/marshmallow/fields.py
-@@ -19,6 +19,8 @@ from marshmallow.utils import (
-     missing as missing_,
-     resolve_field_instance,
+@@ -24,6 +24,8 @@ from marshmallow.utils import (
      is_aware,
+     is_collection,
+     resolve_field_instance,
 +    _get_value_for_key,
 +    _get_value_for_keys,
  )

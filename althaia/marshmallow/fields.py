@@ -4,30 +4,32 @@ from __future__ import annotations
 import collections
 import copy
 import datetime as dt
-import numbers
-import uuid
-import ipaddress
 import decimal
+import ipaddress
 import math
+import numbers
 import typing
+import uuid
 import warnings
-from enum import Enum as EnumType
 from collections.abc import Mapping as _Mapping
+from enum import Enum as EnumType
 
-from althaia.marshmallow import validate, utils, class_registry, types
+from althaia.marshmallow import class_registry, types, utils, validate
 from althaia.marshmallow.base import FieldABC, SchemaABC
+from althaia.marshmallow.exceptions import (
+    FieldInstanceResolutionError,
+    StringNotCollectionError,
+    ValidationError,
+)
 from althaia.marshmallow.utils import (
-    is_collection,
-    missing as missing_,
-    resolve_field_instance,
     is_aware,
+    is_collection,
+    resolve_field_instance,
     _get_value_for_key,
     _get_value_for_keys,
 )
-from althaia.marshmallow.exceptions import (
-    ValidationError,
-    StringNotCollectionError,
-    FieldInstanceResolutionError,
+from althaia.marshmallow.utils import (
+    missing as missing_,
 )
 from althaia.marshmallow.validate import And, Length
 from althaia.marshmallow.warnings import RemovedInMarshmallow4Warning
@@ -89,10 +91,12 @@ class Field(FieldABC):
     :param data_key: The name of the dict key in the external representation, i.e.
         the input of `load` and the output of `dump`.
         If `None`, the key will match the name of the field.
-    :param attribute: The name of the attribute to get the value from when serializing.
-        If `None`, assumes the attribute has the same name as the field.
+    :param attribute: The name of the key/attribute in the internal representation, i.e.
+        the output of `load` and the input of `dump`.
+        If `None`, the key/attribute will match the name of the field.
         Note: This should only be used for very specific use cases such as
-        outputting multiple fields for a single attribute. In most cases,
+        outputting multiple fields for a single attribute, or using keys/attributes
+        that are invalid variable names, unsuitable for field names. In most cases,
         you should use ``data_key`` instead.
     :param validate: Validator or collection of validators that are called
         during deserialization. Validator takes a field's input value as
@@ -237,14 +241,12 @@ class Field(FieldABC):
 
     def __repr__(self) -> str:
         return (
-            "<fields.{ClassName}(dump_default={self.dump_default!r}, "
-            "attribute={self.attribute!r}, "
-            "validate={self.validate}, required={self.required}, "
-            "load_only={self.load_only}, dump_only={self.dump_only}, "
-            "load_default={self.load_default}, allow_none={self.allow_none}, "
-            "error_messages={self.error_messages})>".format(
-                ClassName=self.__class__.__name__, self=self
-            )
+            f"<fields.{self.__class__.__name__}(dump_default={self.dump_default!r}, "
+            f"attribute={self.attribute!r}, "
+            f"validate={self.validate}, required={self.required}, "
+            f"load_only={self.load_only}, dump_only={self.dump_only}, "
+            f"load_default={self.load_default}, allow_none={self.allow_none}, "
+            f"error_messages={self.error_messages})>"
         )
 
     def __deepcopy__(self, memo):
@@ -281,9 +283,9 @@ class Field(FieldABC):
         except KeyError as error:
             class_name = self.__class__.__name__
             message = (
-                "ValidationError raised by `{class_name}`, but error key `{key}` does "
+                f"ValidationError raised by `{class_name}`, but error key `{key}` does "
                 "not exist in the `error_messages` dictionary."
-            ).format(class_name=class_name, key=key)
+            )
             raise AssertionError(message) from error
         if isinstance(msg, (str, bytes)):
             msg = msg.format(**kwargs)
@@ -297,9 +299,7 @@ class Field(FieldABC):
             Use `make_error <marshmallow.fields.Field.make_error>` instead.
         """
         warnings.warn(
-            '`Field.fail` is deprecated. Use `raise self.make_error("{}", ...)` instead.'.format(
-                key
-            ),
+            f'`Field.fail` is deprecated. Use `raise self.make_error("{key}", ...)` instead.',
             RemovedInMarshmallow4Warning,
             stacklevel=2,
         )
@@ -582,7 +582,7 @@ class Nested(Field):
         | type
         | str
         | dict[str, Field | type]
-        | typing.Callable[[], SchemaABC | dict[str, Field | type]],
+        | typing.Callable[[], SchemaABC | type | dict[str, Field | type]],
         *,
         dump_default: typing.Any = missing_,
         default: typing.Any = missing_,
@@ -655,7 +655,7 @@ class Nested(Field):
                 elif not isinstance(nested, (str, bytes)):
                     raise ValueError(
                         "`Nested` fields must be passed a "
-                        "`Schema`, not {}.".format(nested.__class__)
+                        f"`Schema`, not {nested.__class__}."
                     )
                 elif nested == "self":
                     schema_class = self.root.__class__
@@ -1186,7 +1186,8 @@ class Boolean(Field):
         "YES",
         "1",
         1,
-        True,
+        # Equal to 1
+        # True,
     }
     #: Default falsy values.
     falsy = {
@@ -1205,8 +1206,9 @@ class Boolean(Field):
         "NO",
         "0",
         0,
-        0.0,
-        False,
+        # Equal to 0
+        # 0.0,
+        # False,
     }
 
     #: Default error messages.
@@ -1869,9 +1871,9 @@ class IPInterface(Field):
             return value.exploded
         return value.compressed
 
-    def _deserialize(
-        self, value, attr, data, **kwargs
-    ) -> None | (ipaddress.IPv4Interface | ipaddress.IPv6Interface):
+    def _deserialize(self, value, attr, data, **kwargs) -> None | (
+        ipaddress.IPv4Interface | ipaddress.IPv6Interface
+    ):
         if value is None:
             return None
         try:

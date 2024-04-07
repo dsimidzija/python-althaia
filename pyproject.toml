@@ -1,9 +1,9 @@
 [tool.althaia]
-upstream_version = "3.20.1"
+upstream_version = "3.21.1"
 
 [tool.poetry]
 name = "althaia"
-version = "3.20.1"
+version = "3.21.1"
 description = "Marshmallow fork optimized for dumping speed."
 authors = ["Dusko Simidzija <dusko.simidzija@gmail.com>"]
 maintainers = ["Dusko Simidzija <dusko.simidzija@gmail.com>"]
@@ -30,6 +30,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 packages = [
     { include = 'althaia/**/*.py' },

@@ -18,13 +18,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Althaia
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: "recursive"
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
       - name: Install Poetry
         run: |
           export POETRY_HOME=/opt/poetry
@@ -35,10 +35,10 @@ jobs:
         run: |
           export PATH="/opt/poetry/bin:$PATH"
           poetry run task build-sdist
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ !env.ACT }}
         with:
-          name: wheels
+          name: wheels-sdist
           path: ./dist/*.tar.gz
   # copied from NumPy repo, and tweaked for our needs:
   # https://github.com/numpy/numpy/blob/main/.github/workflows/wheels.yml
@@ -64,6 +64,7 @@ jobs:
           - cp39
           - cp310
           - cp311
+          - cp312
         # looks like pypy can just use sdist, unless we try cffi one day
         #include:
         #  - buildplat: [ubuntu-20.04, manylinux_x86_64]
@@ -75,13 +76,13 @@ jobs:
 
     steps:
       - name: Checkout Althaia
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: "recursive"
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
       - name: Fix missing dependencies
         run: |
           python -m pip install pipx
@@ -98,24 +99,35 @@ jobs:
           DISTUTILS_DEBUG: '1'
           CIBW_ARCHS_LINUX: "auto aarch64"
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.buildplat[1] }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ !env.ACT }}
         with:
-          name: wheels
+          name: wheels-actual
           path: ./dist/*.whl
       - name: Inspect
         run: |
           unzip -l 'dist/*.whl'
+
+  merge:
+    runs-on: ubuntu-latest
+    needs:
+      - build-sdist
+      - build-wheels
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: wheels
+          pattern: wheels-*
 
   testpypi_upload:
     runs-on: ubuntu-latest
     environment: staging
     if: ${{ github.event.inputs.deploy-pypi-test == 'yes' }}
     needs:
-      - build-sdist
-      - build-wheels
+      - merge
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: wheels
           path: dist
@@ -133,10 +145,9 @@ jobs:
     environment: production
     if: ${{ github.event.inputs.deploy-pypi-production == 'yes' }}
     needs:
-      - build-sdist
-      - build-wheels
+      - merge
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: wheels
           path: dist

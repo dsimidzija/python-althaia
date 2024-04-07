@@ -1,6 +1,7 @@
 import importlib
 import sys
 import warnings
+from importlib.metadata import DistributionFinder
 from importlib.abc import Loader, MetaPathFinder
 
 
@@ -33,6 +34,17 @@ class AlthaiaImporter(Loader, MetaPathFinder):
     def exec_module(self, module):
         """This was already done by importlib.import_module, so just pass to satisfy the Loader ABC."""
         pass
+
+    def find_distributions(self, context=DistributionFinder.Context()):
+        """Support breaking change from upstream @ 3.21.0 (2024-02-26).
+
+        Althaia distribution will be handled by the default distribution finder,
+        we just need to override marshmallow so we can pretend it's us.
+        """
+        if context.name != "marshmallow":
+            return []
+
+        return [importlib.metadata.Distribution.from_name("althaia")]
 
 
 def patch():

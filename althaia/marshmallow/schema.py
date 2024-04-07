@@ -1,23 +1,21 @@
 """The :class:`Schema` class, including its metaclass and options (class Meta)."""
 from __future__ import annotations
-from abc import ABCMeta
 
-from collections import defaultdict, OrderedDict
-from collections.abc import Mapping
-from functools import lru_cache
-import datetime as dt
-import uuid
-import decimal
 import copy
+import datetime as dt
+import decimal
 import inspect
 import json
 import typing
+import uuid
 import warnings
+from abc import ABCMeta
+from collections import OrderedDict, defaultdict
+from collections.abc import Mapping
+from functools import lru_cache
 
-from althaia.marshmallow import base, fields as ma_fields, class_registry, types
-from althaia.marshmallow.error_store import ErrorStore
-from althaia.marshmallow.exceptions import ValidationError, StringNotCollectionError
-from althaia.marshmallow.orderedset import OrderedSet
+from althaia.marshmallow import base, class_registry, types
+from althaia.marshmallow import fields as ma_fields
 from althaia.marshmallow.decorators import (
     POST_DUMP,
     POST_LOAD,
@@ -26,15 +24,18 @@ from althaia.marshmallow.decorators import (
     VALIDATES,
     VALIDATES_SCHEMA,
 )
+from althaia.marshmallow.error_store import ErrorStore
+from althaia.marshmallow.exceptions import StringNotCollectionError, ValidationError
+from althaia.marshmallow.orderedset import OrderedSet
 from althaia.marshmallow.utils import (
-    RAISE,
     EXCLUDE,
     INCLUDE,
-    missing,
-    set_value,
+    RAISE,
     get_value,
     is_collection,
     is_instance_or_subclass,
+    missing,
+    set_value,
     validate_unknown_parameter_value,
 )
 from althaia.marshmallow.warnings import RemovedInMarshmallow4Warning
@@ -212,6 +213,7 @@ class SchemaOpts:
             warnings.warn(
                 "The json_module class Meta option is deprecated. Use render_module instead.",
                 RemovedInMarshmallow4Warning,
+                stacklevel=2,
             )
             render_module = getattr(meta, "json_module", json)
         else:
@@ -409,9 +411,7 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
         self.error_messages = messages
 
     def __repr__(self) -> str:
-        return "<{ClassName}(many={self.many})>".format(
-            ClassName=self.__class__.__name__, self=self
-        )
+        return f"<{self.__class__.__name__}(many={self.many})>"
 
     @property
     def dict_class(self) -> typing.Type[type]:
@@ -1030,7 +1030,7 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
                 "The data_key argument for one or more fields collides "
                 "with another field's name or data_key argument. "
                 "Check the following field names and "
-                "data_key arguments: {}".format(list(data_keys_duplicates))
+                f"data_key arguments: {list(data_keys_duplicates)}"
             )
         load_attributes = [obj.attribute or name for name, obj in load_fields.items()]
         if len(load_attributes) != len(set(load_attributes)):
@@ -1041,7 +1041,7 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
                 "The attribute argument for one or more fields collides "
                 "with another field's name or attribute argument. "
                 "Check the following field names and "
-                "attribute arguments: {}".format(list(attributes_duplicates))
+                f"attribute arguments: {list(attributes_duplicates)}"
             )
 
         self.fields = fields_dict
@@ -1075,9 +1075,9 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
             # the type checker's perspective.
             if isinstance(field_obj, type) and issubclass(field_obj, base.FieldABC):
                 msg = (
-                    'Field for "{field_name}" must be declared as a '
+                    f'Field for "{field_name}" must be declared as a '
                     "Field instance, not a class. "
-                    'Did you mean "fields.{field_obj.__name__}()"?'
+                    f'Did you mean "fields.{field_obj.__name__}()"?'  # type: ignore
                 )
                 raise TypeError(msg) from error
             raise error
