@@ -89,7 +89,7 @@ jobs:
           python -m pipx ensurepath
       - name: Set up QEMU
         if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.14.1
         with:
