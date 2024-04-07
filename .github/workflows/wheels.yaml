@@ -102,7 +102,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ !env.ACT }}
         with:
-          name: wheels-actual
+          name: wheels-${{ matrix.python }}-${{ matrix.buildplat }}
           path: ./dist/*.whl
       - name: Inspect
         run: |
