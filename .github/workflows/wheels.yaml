@@ -24,7 +24,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
       - name: Install Poetry
         run: |
           export POETRY_HOME=/opt/poetry
@@ -82,7 +82,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
       - name: Fix missing dependencies
         run: |
           python -m pip install pipx
@@ -91,7 +91,7 @@ jobs:
         if: runner.os == 'Linux'
         uses: docker/setup-qemu-action@v3
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.14.1
+        uses: pypa/cibuildwheel@v2.17.0
         with:
           output-dir: dist
         env:
@@ -102,7 +102,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ !env.ACT }}
         with:
-          name: wheels-${{ matrix.python }}-${{ matrix.buildplat }}
+          name: wheels-${{ matrix.python }}-${{ matrix.buildplat[0] }}-${{ matrix.buildplat[1] }}
           path: ./dist/*.whl
       - name: Inspect
         run: |
