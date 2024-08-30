@@ -7,6 +7,7 @@ class:`fields.Nested <marshmallow.fields.Nested>`.
     This module is treated as private API.
     Users should not need to use this module directly.
 """
+
 from __future__ import annotations
 
 import typing
@@ -35,7 +36,8 @@ def register(classname: str, cls: SchemaType) -> None:
         class MyClass:
             pass
 
-        register('MyClass', MyClass)
+
+        register("MyClass", MyClass)
         # Registry:
         # {
         #   'MyClass': [path.to.MyClass],

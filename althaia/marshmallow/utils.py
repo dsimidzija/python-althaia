@@ -1,4 +1,5 @@
 """Utility methods for marshmallow."""
+
 from __future__ import annotations
 
 import collections
@@ -191,6 +192,8 @@ def from_iso_date(value):
 
 
 def from_timestamp(value: typing.Any) -> dt.datetime:
+    if value is True or value is False:
+        raise ValueError("Not a valid POSIX timestamp")
     value = float(value)
     if value < 0:
         raise ValueError("Not a valid POSIX timestamp")

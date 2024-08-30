@@ -55,10 +55,10 @@ jobs:
           - [ubuntu-20.04, musllinux_x86_64]
           - [ubuntu-20.04, manylinux_aarch64]
           - [ubuntu-20.04, musllinux_aarch64]
-          - [macos-11, macosx_x86_64]
+          - [macos-12, macosx_x86_64]
           # not supported by github actions, see
           # https://github.com/actions/virtual-environments/issues/2187
-          #- [macos-11, macosx_arm64]
+          #- [macos-12, macosx_arm64]
           - [windows-2019, win_amd64]
         python:
           - cp39
@@ -69,7 +69,7 @@ jobs:
         #include:
         #  - buildplat: [ubuntu-20.04, manylinux_x86_64]
         #    python: pp38
-        #  - buildplat: [macos-11, macosx_x86_64]
+        #  - buildplat: [macos-12, macosx_x86_64]
         #    python: pp38
         #  - buildplat: [windows-2019, win_amd64]
         #    python: pp38

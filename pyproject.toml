@@ -1,9 +1,9 @@
 [tool.althaia]
-upstream_version = "3.21.1"
+upstream_version = "3.22.0"
 
 [tool.poetry]
 name = "althaia"
-version = "3.21.1"
+version = "3.22.0"
 description = "Marshmallow fork optimized for dumping speed."
 authors = ["Dusko Simidzija <dusko.simidzija@gmail.com>"]
 maintainers = ["Dusko Simidzija <dusko.simidzija@gmail.com>"]
