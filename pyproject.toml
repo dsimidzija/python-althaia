@@ -1,12 +1,17 @@
 [tool.althaia]
-upstream_version = "3.22.0"
+upstream_version = "4.3.0"
 
-[tool.poetry]
+[project]
 name = "althaia"
-version = "3.22.0"
+version = "4.3.0"
+requires-python = ">=3.10,<4.0"
 description = "Marshmallow fork optimized for dumping speed."
-authors = ["Dusko Simidzija <dusko.simidzija@gmail.com>"]
-maintainers = ["Dusko Simidzija <dusko.simidzija@gmail.com>"]
+authors = [
+    { name = "Dusko Simidzija", email = "dusko.simidzija@gmail.com" },
+]
+maintainers = [
+    { name = "Dusko Simidzija", email = "dusko.simidzija@gmail.com" },
+]
 homepage = "https://dsimidzija.github.io"
 repository = "https://github.com/dsimidzija/python-althaia"
 license = "MIT"
@@ -25,12 +30,12 @@ keywords = [
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 packages = [
     { include = 'althaia/**/*.py' },
@@ -48,22 +53,16 @@ exclude = [
     "upstream",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-# copied from marshmallow
-packaging = ">=17.0"
-
-[tool.poetry.dev-dependencies]
-cython = "3.0.0"
+[tool.poetry.group.dev.dependencies]
+cython = "3.2.4"
 dsi-utils = {git = "https://github.com/dsimidzija/python-dsi-utils.git", rev = "master"}
 pep440 = "^0.1.0"
 taskipy = "^1.9.0"
 toml = "^0.10.2"
 twine = "^3.7.1"
 # everything below is needed by upstream marshmallow tests
-pytest = "^6.2.5"
-pytz = "^2021.3"
-simplejson = "^3.17.6"
+pytest = "*"
+simplejson = "*"
 
 [tool.poetry.build]
 script = "builder.py"
@@ -71,7 +70,7 @@ generate-setup-file = false
 
 [build-system]
 requires = [
-    "Cython==3.0.0",
+    "Cython==3.2.4",
     "poetry",
     "poetry_core>=1.0.0",
     "setuptools>=62.3.2",

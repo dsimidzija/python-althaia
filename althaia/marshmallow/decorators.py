@@ -35,12 +35,12 @@ Example: ::
             item["email"] = item["email"].lower().strip()
             return item
 
-        @pre_load(pass_many=True)
+        @pre_load(pass_collection=True)
         def remove_envelope(self, data, many, **kwargs):
             namespace = "results" if many else "result"
             return data[namespace]
 
-        @post_dump(pass_many=True)
+        @post_dump(pass_collection=True)
         def add_envelope(self, data, many, **kwargs):
             namespace = "results" if many else "result"
             return {namespace: data}
@@ -68,8 +68,8 @@ Example: ::
 from __future__ import annotations
 
 import functools
+import typing
 from collections import defaultdict
-from typing import Any, Callable, cast
 
 PRE_DUMP = "pre_dump"
 POST_DUMP = "post_dump"
@@ -80,28 +80,32 @@ VALIDATES_SCHEMA = "validates_schema"
 
 
 class MarshmallowHook:
-    __marshmallow_hook__: dict[str, list[tuple[bool, Any]]] | None = None
+    __marshmallow_hook__: dict[str, list[tuple[bool, typing.Any]]] | None = None
 
 
-def validates(field_name: str) -> Callable[..., Any]:
-    """Register a field validator.
+def validates(*field_names: str) -> typing.Callable[..., typing.Any]:
+    """Register a validator method for field(s).
 
-    :param str field_name: Name of the field that the method validates.
+    :param field_names: Names of the fields that the method validates.
+
+    .. versionchanged:: 4.0.0 Accepts multiple field names as positional arguments.
+    .. versionchanged:: 4.0.0 Decorated methods receive ``data_key`` as a keyword argument.
     """
-    return set_hook(None, VALIDATES, field_name=field_name)
+    return set_hook(None, VALIDATES, field_names=field_names)
 
 
 def validates_schema(
-    fn: Callable[..., Any] | None = None,
-    pass_many: bool = False,
+    fn: typing.Callable[..., typing.Any] | None = None,
+    *,
+    pass_collection: bool = False,
     pass_original: bool = False,
     skip_on_field_errors: bool = True,
-) -> Callable[..., Any]:
+) -> typing.Callable[..., typing.Any]:
     """Register a schema-level validator.
 
     By default it receives a single object at a time, transparently handling the ``many``
-    argument passed to the `Schema`'s :func:`~marshmallow.Schema.validate` call.
-    If ``pass_many=True``, the raw data (which may be a collection) is passed.
+    argument passed to the `Schema <marshmallow.Schema>`'s :func:`~marshmallow.Schema.validate` call.
+    If ``pass_collection=True``, the raw data (which may be a collection) is passed.
 
     If ``pass_original=True``, the original data (before unmarshalling) will be passed as
     an additional argument to the method.
@@ -109,101 +113,118 @@ def validates_schema(
     If ``skip_on_field_errors=True``, this validation method will be skipped whenever
     validation errors have been detected when validating fields.
 
-    .. versionchanged:: 3.0.0b1
-        ``skip_on_field_errors`` defaults to `True`.
-
-    .. versionchanged:: 3.0.0
-        ``partial`` and ``many`` are always passed as keyword arguments to
+    .. versionchanged:: 3.0.0b1 ``skip_on_field_errors`` defaults to `True`.
+    .. versionchanged:: 3.0.0 ``partial`` and ``many`` are always passed as keyword arguments to
         the decorated method.
+    .. versionchanged:: 4.0.0 ``unknown`` is passed as a keyword argument to the decorated method.
+    .. versionchanged:: 4.0.0 ``pass_many`` is renamed to ``pass_collection``.
+    .. versionchanged:: 4.0.0 ``pass_collection``, ``pass_original``, and ``skip_on_field_errors``
+        are keyword-only arguments.
     """
     return set_hook(
         fn,
         VALIDATES_SCHEMA,
-        many=pass_many,
+        many=pass_collection,
         pass_original=pass_original,
         skip_on_field_errors=skip_on_field_errors,
     )
 
 
 def pre_dump(
-    fn: Callable[..., Any] | None = None, pass_many: bool = False
-) -> Callable[..., Any]:
+    fn: typing.Callable[..., typing.Any] | None = None,
+    *,
+    pass_collection: bool = False,
+) -> typing.Callable[..., typing.Any]:
     """Register a method to invoke before serializing an object. The method
     receives the object to be serialized and returns the processed object.
 
     By default it receives a single object at a time, transparently handling the ``many``
-    argument passed to the `Schema`'s :func:`~marshmallow.Schema.dump` call.
-    If ``pass_many=True``, the raw data (which may be a collection) is passed.
+    argument passed to the `Schema <marshmallow.Schema>`'s :func:`~marshmallow.Schema.dump` call.
+    If ``pass_collection=True``, the raw data (which may be a collection) is passed.
 
-    .. versionchanged:: 3.0.0
-        ``many`` is always passed as a keyword arguments to the decorated method.
+    .. versionchanged:: 3.0.0 ``many`` is always passed as a keyword arguments to the decorated method.
+    .. versionchanged:: 4.0.0 ``pass_many`` is renamed to ``pass_collection``.
+    .. versionchanged:: 4.0.0 ``pass_collection`` is a keyword-only argument.
     """
-    return set_hook(fn, PRE_DUMP, many=pass_many)
+    return set_hook(fn, PRE_DUMP, many=pass_collection)
 
 
 def post_dump(
-    fn: Callable[..., Any] | None = None,
-    pass_many: bool = False,
+    fn: typing.Callable[..., typing.Any] | None = None,
+    *,
+    pass_collection: bool = False,
     pass_original: bool = False,
-) -> Callable[..., Any]:
+) -> typing.Callable[..., typing.Any]:
     """Register a method to invoke after serializing an object. The method
     receives the serialized object and returns the processed object.
 
     By default it receives a single object at a time, transparently handling the ``many``
-    argument passed to the `Schema`'s :func:`~marshmallow.Schema.dump` call.
-    If ``pass_many=True``, the raw data (which may be a collection) is passed.
+    argument passed to the `Schema <marshmallow.Schema>`'s :func:`~marshmallow.Schema.dump` call.
+    If ``pass_collection=True``, the raw data (which may be a collection) is passed.
 
     If ``pass_original=True``, the original data (before serializing) will be passed as
     an additional argument to the method.
 
-    .. versionchanged:: 3.0.0
-        ``many`` is always passed as a keyword arguments to the decorated method.
+    .. versionchanged:: 3.0.0 ``many`` is always passed as a keyword arguments to the decorated method.
+    .. versionchanged:: 4.0.0 ``pass_many`` is renamed to ``pass_collection``.
+    .. versionchanged:: 4.0.0 ``pass_collection`` and ``pass_original`` are keyword-only arguments.
     """
-    return set_hook(fn, POST_DUMP, many=pass_many, pass_original=pass_original)
+    return set_hook(fn, POST_DUMP, many=pass_collection, pass_original=pass_original)
 
 
 def pre_load(
-    fn: Callable[..., Any] | None = None, pass_many: bool = False
-) -> Callable[..., Any]:
+    fn: typing.Callable[..., typing.Any] | None = None,
+    *,
+    pass_collection: bool = False,
+) -> typing.Callable[..., typing.Any]:
     """Register a method to invoke before deserializing an object. The method
     receives the data to be deserialized and returns the processed data.
 
     By default it receives a single object at a time, transparently handling the ``many``
-    argument passed to the `Schema`'s :func:`~marshmallow.Schema.load` call.
-    If ``pass_many=True``, the raw data (which may be a collection) is passed.
+    argument passed to the `Schema <marshmallow.Schema>`'s :func:`~marshmallow.Schema.load` call.
+    If ``pass_collection=True``, the raw data (which may be a collection) is passed.
 
-    .. versionchanged:: 3.0.0
-        ``partial`` and ``many`` are always passed as keyword arguments to
+    .. versionchanged:: 3.0.0 ``partial`` and ``many`` are always passed as keyword arguments to
         the decorated method.
+    .. versionchanged:: 4.0.0 ``pass_many`` is renamed to ``pass_collection``.
+    .. versionchanged:: 4.0.0 ``pass_collection`` is a keyword-only argument.
+    .. versionchanged:: 4.0.0 ``unknown`` is passed as a keyword argument to the decorated method.
     """
-    return set_hook(fn, PRE_LOAD, many=pass_many)
+    return set_hook(fn, PRE_LOAD, many=pass_collection)
 
 
 def post_load(
-    fn: Callable[..., Any] | None = None,
-    pass_many: bool = False,
+    fn: typing.Callable[..., typing.Any] | None = None,
+    *,
+    pass_collection: bool = False,
     pass_original: bool = False,
-) -> Callable[..., Any]:
+) -> typing.Callable[..., typing.Any]:
     """Register a method to invoke after deserializing an object. The method
     receives the deserialized data and returns the processed data.
 
     By default it receives a single object at a time, transparently handling the ``many``
-    argument passed to the `Schema`'s :func:`~marshmallow.Schema.load` call.
-    If ``pass_many=True``, the raw data (which may be a collection) is passed.
+    argument passed to the `Schema <marshmallow.Schema>`'s :func:`~marshmallow.Schema.load` call.
+    If ``pass_collection=True``, the raw data (which may be a collection) is passed.
 
     If ``pass_original=True``, the original data (before deserializing) will be passed as
     an additional argument to the method.
 
-    .. versionchanged:: 3.0.0
-        ``partial`` and ``many`` are always passed as keyword arguments to
+    .. versionchanged:: 3.0.0 ``partial`` and ``many`` are always passed as keyword arguments to
         the decorated method.
+    .. versionchanged:: 4.0.0 ``pass_many`` is renamed to ``pass_collection``.
+    .. versionchanged:: 4.0.0 ``pass_collection`` and ``pass_original`` are keyword-only arguments.
+    .. versionchanged:: 4.0.0 ``unknown`` is passed as a keyword argument to the decorated method.
     """
-    return set_hook(fn, POST_LOAD, many=pass_many, pass_original=pass_original)
+    return set_hook(fn, POST_LOAD, many=pass_collection, pass_original=pass_original)
 
 
 def set_hook(
-    fn: Callable[..., Any] | None, tag: str, many: bool = False, **kwargs: Any
-) -> Callable[..., Any]:
+    fn: typing.Callable[..., typing.Any] | None,
+    tag: str,
+    *,
+    many: bool = False,
+    **kwargs: typing.Any,
+) -> typing.Callable[..., typing.Any]:
     """Mark decorated function as a hook to be picked up later.
     You should not need to use this method directly.
 
@@ -220,7 +241,7 @@ def set_hook(
 
     # Set a __marshmallow_hook__ attribute instead of wrapping in some class,
     # because I still want this to end up as a normal (unbound) method.
-    function = cast(MarshmallowHook, fn)
+    function = typing.cast("MarshmallowHook", fn)
     try:
         hook_config = function.__marshmallow_hook__
     except AttributeError:

@@ -20,7 +20,6 @@ class ValidationError(MarshmallowError):
     :param message: An error message, list of error messages, or dict of
         error messages. If a dict, the keys are subitems and the values are error messages.
     :param field_name: Field name to store the error on.
-        If `None`, the error is stored as schema-level error.
     :param data: Raw input data.
     :param valid_data: Valid (de)serialized data.
     """
@@ -32,7 +31,7 @@ class ValidationError(MarshmallowError):
         data: typing.Mapping[str, typing.Any]
         | typing.Iterable[typing.Mapping[str, typing.Any]]
         | None = None,
-        valid_data: list[dict[str, typing.Any]] | dict[str, typing.Any] | None = None,
+        valid_data: list[typing.Any] | dict[str, typing.Any] | None = None,
         **kwargs,
     ):
         self.messages = [message] if isinstance(message, (str, bytes)) else message
@@ -67,5 +66,5 @@ class StringNotCollectionError(MarshmallowError, TypeError):
     """Raised when a string is passed when a list of strings is expected."""
 
 
-class FieldInstanceResolutionError(MarshmallowError, TypeError):
-    """Raised when schema to instantiate is neither a Schema class nor an instance."""
+class _FieldInstanceResolutionError(MarshmallowError, TypeError):
+    """Raised when an argument is passed to a field class that cannot be resolved to a Field instance."""

@@ -64,7 +64,12 @@ def copy_upstream_source():
         for before, after in replace:
             content = content.replace(before, after)
 
-        with open(Path(OUTPUT_DIR, py_input_path.name), "w") as py_output_file:
+        # added to support upstream submodules
+        relative_path = py_input_path.relative_to(SOURCE_DIR)
+        output_path = Path(OUTPUT_DIR) / relative_path
+        output_path.parent.mkdir(exist_ok=True)
+
+        with open(output_path, "w") as py_output_file:
             py_output_file.write(content)
 
 

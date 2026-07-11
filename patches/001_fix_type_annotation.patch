@@ -1,29 +1,3 @@
-diff --git a/althaia/marshmallow/schema.py b/althaia/marshmallow/schema.py
-index 6f15a0f..64670f0 100644
---- a/althaia/marshmallow/schema.py
-+++ b/althaia/marshmallow/schema.py
-@@ -124,10 +124,10 @@ class SchemaMeta(ABCMeta):
-     @classmethod
-     def get_declared_fields(
-         mcs,
--        klass: type,
-+        klass: typing.Type[type],
-         cls_fields: list,
-         inherited_fields: list,
--        dict_cls: type = dict,
-+        dict_cls: typing.Type[type] = dict,
-     ):
-         """Returns a dictionary of field_name => `Field` pairs declared on the class.
-         This is exposed mainly so that plugins can add additional fields, e.g. fields
-@@ -411,7 +411,7 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
-         )
- 
-     @property
--    def dict_class(self) -> type:
-+    def dict_class(self) -> typing.Type[type]:
-         return OrderedDict if self.ordered else dict
- 
-     @classmethod
 diff --git a/althaia/marshmallow/utils.py b/althaia/marshmallow/utils.py
 index 757f4a8..3f64848 100644
 --- a/althaia/marshmallow/utils.py
@@ -41,8 +15,12 @@ diff --git a/althaia/marshmallow/validate.py b/althaia/marshmallow/validate.py
 index 3588a42..ec97726 100644
 --- a/althaia/marshmallow/validate.py
 +++ b/althaia/marshmallow/validate.py
-@@ -201,7 +201,7 @@ class URL(Validator):
-     def _format_error(self, value) -> str:
+@@ -212,10 +212,10 @@ class URL(Validator):
+     def _repr_args(self) -> str:
+         return f"relative={self.relative!r}, absolute={self.absolute!r}"
+ 
+-    def _format_error(self, value: str) -> str:
++    def _format_error(self, value: str | None) -> str:
          return self.error.format(input=value)
  
 -    def __call__(self, value: str) -> str:
@@ -63,12 +41,52 @@ index 3588a42..ec97726 100644
          message = self._format_error(value)
  
          if not value or "@" not in value:
-@@ -471,7 +471,7 @@ class Regexp(Validator):
+@@ -493,7 +493,7 @@ class Regexp(Validator):
      def __init__(
          self,
-         regex: str | bytes | typing.Pattern,
+         regex: str | bytes | re.Pattern[str] | re.Pattern[bytes],
 -        flags: int = 0,
 +        flags: int | re.RegexFlag = 0,
          *,
          error: str | None = None,
      ):
+diff --git a/althaia/marshmallow/schema.py b/althaia/marshmallow/schema.py
+index 23417af..cdf4d8a 100644
+--- a/althaia/marshmallow/schema.py
++++ b/althaia/marshmallow/schema.py
+@@ -15,7 +15,7 @@ import typing
+ import uuid
+ from abc import ABCMeta
+ from collections import defaultdict
+-from collections.abc import Mapping, Sequence
++from collections.abc import Mapping, MutableMapping, Sequence
+ from itertools import zip_longest
+ 
+ from althaia.marshmallow import class_registry, types
+@@ -155,7 +155,7 @@ class SchemaMeta(ABCMeta):
+             class_registry.register(name, cls)
+         cls._hooks = cls.resolve_hooks()
+ 
+-    def resolve_hooks(cls) -> dict[str, list[tuple[str, bool, dict]]]:
++    def resolve_hooks(cls) -> MutableMapping[str, list[tuple[str, bool, dict]]]:
+         """Add in the decorated processors
+ 
+         By doing this after constructing the class, we let standard inheritance
+@@ -163,7 +163,7 @@ class SchemaMeta(ABCMeta):
+         """
+         mro = inspect.getmro(cls)
+ 
+-        hooks: dict[str, list[tuple[str, bool, dict]]] = defaultdict(list)
++        hooks: MutableMapping[str, list[tuple[str, bool, dict]]] = defaultdict(list)
+ 
+         for attr_name in dir(cls):
+             # Need to look up the actual descriptor, not whatever might be
+@@ -183,7 +183,7 @@ class SchemaMeta(ABCMeta):
+                 continue
+ 
+             try:
+-                hook_config: dict[str, list[tuple[bool, dict]]] = (
++                hook_config: MutableMapping[str, list[tuple[bool, dict]]] = (
+                     attr.__marshmallow_hook__
+                 )
+             except AttributeError:

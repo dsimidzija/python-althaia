@@ -7,6 +7,7 @@ class:`fields.Nested <marshmallow.fields.Nested>`.
     This module is treated as private API.
     Users should not need to use this module directly.
 """
+# ruff: noqa: ERA001
 
 from __future__ import annotations
 
@@ -17,7 +18,7 @@ from althaia.marshmallow.exceptions import RegistryError
 if typing.TYPE_CHECKING:
     from althaia.marshmallow import Schema
 
-    SchemaType = typing.Type[Schema]
+    SchemaType = type[Schema]
 
 # {
 #   <class_name>: <list of class objects>
@@ -49,7 +50,7 @@ def register(classname: str, cls: SchemaType) -> None:
     module = cls.__module__
     # Full module path to the class
     # e.g. user.schemas.UserSchema
-    fullpath = ".".join([module, classname])
+    fullpath = f"{module}.{classname}"
     # If the class is already registered; need to check if the entries are
     # in the same module as cls to avoid having multiple instances of the same
     # class in the registry
@@ -66,13 +67,22 @@ def register(classname: str, cls: SchemaType) -> None:
     else:
         # If fullpath does exist, replace existing entry
         _registry[fullpath] = [cls]
-    return None
 
 
-def get_class(classname: str, all: bool = False) -> list[SchemaType] | SchemaType:
+@typing.overload
+def get_class(classname: str, *, all: typing.Literal[False] = ...) -> SchemaType: ...
+
+
+@typing.overload
+def get_class(
+    classname: str, *, all: typing.Literal[True] = ...
+) -> list[SchemaType]: ...
+
+
+def get_class(classname: str, *, all: bool = False) -> list[SchemaType] | SchemaType:  # noqa: A002
     """Retrieve a class from the registry.
 
-    :raises: marshmallow.exceptions.RegistryError if the class cannot be found
+    :raises: `marshmallow.exceptions.RegistryError` if the class cannot be found
         or if there are multiple entries for the given class name.
     """
     try:
@@ -90,5 +100,4 @@ def get_class(classname: str, all: bool = False) -> list[SchemaType] | SchemaTyp
             "were found. Please use the full, "
             "module-qualified path."
         )
-    else:
-        return _registry[classname][0]
+    return _registry[classname][0]

@@ -23,7 +23,7 @@
 from collections.abc import MutableSet
 
 
-class OrderedSet(MutableSet):
+class OrderedSet(MutableSet):  # noqa: PLW1641
     def __init__(self, iterable=None):
         self.end = end = []
         end += [None, end, end]  # sentinel node for doubly linked list
@@ -45,7 +45,7 @@ class OrderedSet(MutableSet):
 
     def discard(self, key):
         if key in self.map:
-            key, prev, next = self.map.pop(key)
+            key, prev, next = self.map.pop(key)  # noqa: A001
             prev[2] = next
             next[1] = prev
 

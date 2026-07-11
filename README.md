@@ -27,15 +27,15 @@ Check out the original [upstream PR][] for some discussion, or my [original anno
 ## How fast is it?
 
 It really depends on your data and usage, but using the `benchmark.py` test from the upstream marshmallow repo,
-Althaia seems to shave off some ~30% of execution time on average. These values are an example test run results
+Althaia seems to shave off about 56% of execution time on average. These values are an example test run results
 from the upstream benchmark:
 
 | Upstream(usec/dump) | Althaia(usec/dump) | Improvement(%) |
 |--------------------:|-------------------:|---------------:|
-|              374.64 |             258.61 |         -30.97 |
-|            19189.83 |           13275.84 |         -30.81 |
-|           396368.67 |          275365.67 |         -30.52 |
-|           198163.58 |          133714.07 |         -32.52 |
+|                8.97 |               3.95 |             56 |
+|                8.98 |               3.88 |             56 |
+|                9.45 |               4.17 |             56 |
+|                9.30 |               3.98 |             57 |
 
 The table is the result of the following commands:
 
@@ -45,30 +45,8 @@ The table is the result of the following commands:
     python performance/benchmark.py --iterations=10 --repeat=10 --object-count 10000
 
 They are also available in this repo as `poetry run task upstream-performance`. Note that you may get different
-results while running the benchmarks (the numbers above were obtained with Althaia v3.20.1, generally speaking you
+results while running the benchmarks (the numbers above were obtained with Althaia v4.3.0, generally speaking you
 should be getting better results with newer versions, but sometimes not).
-
-Contribution into the [serialization benchmark][] is in the works (update: [stalled][serialization-stalled]), but
-local run seems to be almost comparable to [Toasted Marshmallow][], which is stuck on an old marshmallow 2.x branch.
-This means that Althaia gives you (almost) the speed of Toasted Marshmallow, with all the goodies of the latest
-marshmallow.
-
-| Library               | Many Objects (seconds)  | One Object (seconds) | Relative    |
-| --------------------  | ----------------------- | -------------------  | ----------  |
-| serpyco               | 0.00767612              | 0.00389147           | 1           |
-| Custom                | 0.00965786              | 0.00467634           | 1.23917     |
-| lima                  | 0.0116959               | 0.00583649           | 1.51564     |
-| Pickle                | 0.0137603               | 0.0136833            | 2.37246     |
-| serpy                 | 0.0352728               | 0.0181508            | 4.61839     |
-| Strainer              | 0.0516005               | 0.0260506            | 6.71281     |
-| Toasted Marshmallow   | 0.076792                | 0.0412786            | 10.207      |
-| **Althaia**           | **0.101892**            | **0.0484211**        | **12.9943** |
-| Colander              | 0.208514                | 0.105719             | 27.1649     |
-| Avro                  | 0.303786                | 0.151184             | 39.3314     |
-| Lollipop              | 0.352331                | 0.173141             | 45.4262     |
-| Marshmallow           | 0.531636                | 0.276243             | 69.8398     |
-| Django REST Framework | 0.531175                | 0.387527             | 79.4203     |
-| kim                   | 0.669759                | 0.336132             | 86.9576     |
 
 ## Installation
 
@@ -158,6 +136,8 @@ Preparing a new version TL;DR:
   which are no longer supported by the recently released Cython 3.0.0. Maintaining patches for 3.8 and 3.9+
   would be difficult without being a significant time sink. Since python3.8 is already in security-updates-only state,
   it's much easier to just drop it.
+* **Important:** This fork was created for a specific work project I was maintaining. I am no longer maintaining it, so
+  expect the updates to be delayed by a rude amount of time.
 
 [marshmallow]: https://github.com/marshmallow-code/marshmallow
 [cython]: https://github.com/cython/cython

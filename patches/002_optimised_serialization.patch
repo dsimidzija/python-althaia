@@ -2,15 +2,6 @@ diff --git a/althaia/marshmallow/fields.py b/althaia/marshmallow/fields.py
 index d1cd88c..7af5b4a 100644
 --- a/althaia/marshmallow/fields.py
 +++ b/althaia/marshmallow/fields.py
-@@ -24,6 +24,8 @@ from marshmallow.utils import (
-     is_aware,
-     is_collection,
-     resolve_field_instance,
-+    _get_value_for_key,
-+    _get_value_for_keys,
- )
- from marshmallow.exceptions import (
-     ValidationError,
 @@ -310,6 +312,50 @@ class Field(FieldABC):
          if value is None and not self.allow_none:
              raise self.make_error("null")
@@ -44,10 +35,10 @@ index d1cd88c..7af5b4a 100644
 +            accessor_func = accessor
 +        else:
 +            if not isinstance(check_key, int) and "." in check_key:
-+                accessor_func = _get_value_for_keys
++                accessor_func = utils._get_value_for_keys
 +                check_key = check_key.split(".")
 +            else:
-+                accessor_func = _get_value_for_key
++                accessor_func = utils._get_value_for_key
 +
 +        def _serializer(obj):
 +            value = accessor_func(obj, check_key, missing_)
@@ -66,10 +57,10 @@ diff --git a/althaia/marshmallow/schema.py b/althaia/marshmallow/schema.py
 index 12bb2f4..b755d53 100644
 --- a/althaia/marshmallow/schema.py
 +++ b/althaia/marshmallow/schema.py
-@@ -395,6 +394,9 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
-         self.fields = {}  # type: typing.MutableMapping[str, ma_fields.Field]
-         self.load_fields = {}  # type: typing.MutableMapping[str, ma_fields.Field]
-         self.dump_fields = {}  # type: typing.MutableMapping[str, ma_fields.Field]
+@@ -439,6 +439,9 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
+         self.fields: dict[str, Field] = {}
+         self.load_fields: dict[str, Field] = {}
+         self.dump_fields: dict[str, Field] = {}
 +        self.dump_serializers = (
 +            self.dict_class()
 +        )  # type: typing.MutableMapping[str, typing.Callable]
@@ -94,15 +85,12 @@ index 12bb2f4..b755d53 100644
      ##### Serialization/Deserialization API #####
  
      @staticmethod
-@@ -511,19 +516,41 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
-         .. versionchanged:: 1.0.0
-             Renamed from ``marshal``.
+@@ -534,16 +534,41 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
+         :param many: `True` if ``data`` should be serialized as a collection.
+         :return: A dictionary of the serialized data
          """
 -        if many and obj is not None:
--            return [
--                self._serialize(d, many=False)
--                for d in typing.cast(typing.Iterable[_T], obj)
--            ]
+-            return [self._serialize(d, many=False) for d in obj]
 -        ret = self.dict_class()
 -        for attr_name, field_obj in self.dump_fields.items():
 -            value = field_obj.serialize(attr_name, obj, accessor=self.get_attribute)
@@ -147,9 +135,9 @@ index 12bb2f4..b755d53 100644
 +            return output[0]
 +        return output
  
-     def dump(self, obj: typing.Any, *, many: typing.Optional[bool] = None):
+     def dump(self, obj: typing.Any, *, many: bool | None = None):
          """Serialize an object to native Python data types according to this
-@@ -1016,6 +1043,7 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
+@@ -1057,6 +1057,7 @@ class Schema(base.SchemaABC, metaclass=SchemaMeta):
          self.fields = fields_dict
          self.dump_fields = dump_fields
          self.load_fields = load_fields
