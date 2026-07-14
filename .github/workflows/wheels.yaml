@@ -51,15 +51,13 @@ jobs:
         # Github Actions doesn't support pairing matrix values together, let's improvise
         # https://github.com/github/feedback/discussions/7835#discussioncomment-1769026
         buildplat:
-          - [ubuntu-20.04, manylinux_x86_64]
-          - [ubuntu-20.04, musllinux_x86_64]
-          - [ubuntu-20.04, manylinux_aarch64]
-          - [ubuntu-20.04, musllinux_aarch64]
-          - [macos-12, macosx_x86_64]
-          # not supported by github actions, see
-          # https://github.com/actions/virtual-environments/issues/2187
-          #- [macos-12, macosx_arm64]
-          - [windows-2019, win_amd64]
+          - [ubuntu-24.04, manylinux_x86_64]
+          - [ubuntu-24.04, musllinux_x86_64]
+          - [ubuntu-24.04, manylinux_aarch64]
+          - [ubuntu-24.04, musllinux_aarch64]
+          - [macos-26-intel, macosx_x86_64]
+          - [macos-26, macosx_arm64]
+          - [windows-2025, win_amd64]
         python:
           - cp310
           - cp311
