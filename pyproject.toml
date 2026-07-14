@@ -100,9 +100,9 @@ build-frontend = "build"
 build-verbosity = 3
 # before-build is necessary, but I'm not sure why, as
 # cibuildwheel is not picking up cython from `build-system.requires`
-before-build = "python -m pip install cython==3.0.0"
-manylinux-x86_64-image = "manylinux2014"
-musllinux-x86_64-image = "musllinux_1_1"
+before-build = "python -m pip install cython==3.2.4"
+manylinux-x86_64-image = "manylinux_2_28"
+musllinux-x86_64-image = "musllinux_1_2"
 test-command = [
     "mkdir -p /tmp/tests",
     "cp {project}/upstream/tests/*.py /tmp/tests",
