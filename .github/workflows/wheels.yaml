@@ -18,11 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Althaia
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: Install Poetry
@@ -53,11 +53,11 @@ jobs:
         buildplat:
           - [ubuntu-24.04, manylinux_x86_64]
           - [ubuntu-24.04, musllinux_x86_64]
-          - [ubuntu-24.04, manylinux_aarch64]
-          - [ubuntu-24.04, musllinux_aarch64]
+          - [ubuntu-24.04-arm, manylinux_aarch64]
+          - [ubuntu-24.04-arm, musllinux_aarch64]
           - [macos-26-intel, macosx_x86_64]
-          - [macos-26, macosx_arm64]
-          - [windows-2025, win_amd64]
+          - [macos-15, macosx_arm64]
+          - [windows-2022, win_amd64]
         python:
           - cp310
           - cp311
@@ -75,11 +75,11 @@ jobs:
 
     steps:
       - name: Checkout Althaia
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: Fix missing dependencies
@@ -88,7 +88,7 @@ jobs:
           python -m pipx ensurepath
       - name: Set up QEMU
         if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       - name: Build wheels
         uses: pypa/cibuildwheel@v4.1.0
         with:
@@ -130,7 +130,7 @@ jobs:
         with:
           name: wheels
           path: dist
-      - uses: pypa/gh-action-pypi-publish@v1.8.8
+      - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}
@@ -150,7 +150,7 @@ jobs:
         with:
           name: wheels
           path: dist
-      - uses: pypa/gh-action-pypi-publish@v1.8.8
+      - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}
