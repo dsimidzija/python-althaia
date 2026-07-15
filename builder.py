@@ -5,7 +5,6 @@ import os
 import platform
 import shutil
 import subprocess
-import sys
 import typing
 from pathlib import Path
 
@@ -111,6 +110,7 @@ def cythonize_patched() -> typing.List[Extension]:
         # https://github.com/cython/cython/issues/2968
         if platform.system() == "Windows" and "__init__" in str(py_file):
             continue
+
         module_path = py_file.with_suffix("")
         module_path = str(module_path).replace(os.sep, ".")
         extension_module = Extension(
