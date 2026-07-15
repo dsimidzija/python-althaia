@@ -134,6 +134,7 @@ test-requires = [
     "poetry",
     "pytest",
     "pytz",
+    "tzdata",  # fixes Windows tests, as Windows apparently doesn't have an IANA database
     "simplejson",
     "taskipy",
 ]
