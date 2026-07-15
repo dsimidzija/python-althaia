@@ -53,6 +53,25 @@ exclude = [
     "upstream",
 ]
 
+# facepalm: poetry ignores these in the project section...
+# TODO: migrate to uv
+[tool.poetry]
+packages = [
+    { include = 'althaia/**/*.py' },
+]
+include = [
+    { path = "README.md" },
+    { path = "althaia/**/*.py" },
+    { path = "althaia/**/*.so", format = "wheel" },
+    { path = "althaia/**/*.pyd", format = "wheel" },
+]
+exclude = [
+    "**/.gitignore",
+    "althaia/**/*.orig",
+    "althaia/**/*.rej",
+    "upstream",
+]
+
 [tool.poetry.group.dev.dependencies]
 cython = "3.2.4"
 dsi-utils = {git = "https://github.com/dsimidzija/python-dsi-utils.git", rev = "master"}
@@ -73,7 +92,7 @@ requires = [
     "Cython==3.2.4",
     "poetry",
     "poetry_core>=1.0.0",
-    "setuptools>=62.3.2",
+    "setuptools>=83",
 ]
 build-backend = "poetry.core.masonry.api"
 
@@ -135,3 +154,9 @@ test-command = [
     "python -c \"fin = open(\\\"tests\\conftest.py\\\", \\\"r\\\"); cont = fin.read(); fin.close(); cont = cont.replace(\\\"import pytest\\\", \\\"import althaia;althaia.patch();import pytest\\\"); fout = open(\\\"tests\\conftest.py\\\", \\\"w\\\"); fout.write(cont); fout.close();\"",
     "pytest tests",
 ]
+
+# if things break in the pipeline, this is a way of inspecting the wheel before the repair step
+#[[tool.cibuildwheel.overrides]]
+#select = "*"
+#inherit.repair-wheel-command = "prepend"
+#repair-wheel-command = "echo 'Before repair' && pwd && ls -l {dest_dir} && ls -l /tmp/cibuildwheel/built_wheel && unzip -l '/tmp/cibuildwheel/built_wheel/*.whl'"
